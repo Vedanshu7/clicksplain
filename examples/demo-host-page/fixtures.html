@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>onboard-agent fixtures (isolation stress test — deliberately ugly)</title>
+<style>
+  /* Deliberately adversarial host-page styles: aggressive reset + class names
+     that collide with onboard-agent's own internal class names (.button, .popover),
+     to prove the widget's Shadow DOM boundary actually holds. This page is meant
+     to look bad — see demo-byok.html / demo-byo-endpoint.html for what the widget
+     looks like on an actual polished product page. */
+  * { all: revert; box-sizing: content-box; }
+  body { font-family: Georgia, serif; margin: 0; background: #111; color: #eee; }
+  .button { background: red; color: yellow; border: 5px dashed lime; font-size: 24px; padding: 24px; }
+  .popover { background: purple !important; display: none; }
+  header { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: #222; z-index: 999999; padding: 12px; }
+  .stack-trap { position: relative; z-index: 999998; margin: 100px 40px; }
+  .corner { position: fixed; width: 90px; height: 40px; background: #444; color: #fff; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 12px; }
+  .corner.tl { top: 70px; left: 8px; }
+  .corner.tr { top: 70px; right: 8px; }
+  .corner.bl { bottom: 8px; left: 8px; }
+  .corner.br { bottom: 80px; right: 8px; }
+  .scroll-box { width: 300px; height: 100px; overflow: hidden; border: 2px solid #555; margin: 40px; padding: 10px; }
+  .scroll-box .deep-item { margin-top: 300px; }
+  .banner { width: 100%; padding: 60px 0; background: linear-gradient(90deg, #5b5bf5, #f55b9d); text-align: center; font-size: 28px; color: #fff; }
+  form { margin: 40px; }
+  input { display: block; margin-bottom: 12px; padding: 8px; font-size: 14px; }
+  .note { max-width: 600px; margin: 40px; line-height: 1.5; }
+</style>
+</head>
+<body>
+  <header><button class="button" id="nav-invite" aria-label="Invite teammates">Invite</button></header>
+
+  <div class="corner tl" role="button" tabindex="0">TL corner</div>
+  <div class="corner tr" role="button" tabindex="0">TR corner</div>
+  <div class="corner bl" role="button" tabindex="0">BL corner</div>
+  <div class="corner br" role="button" tabindex="0">BR corner</div>
+
+  <div class="banner" id="hero-banner">Full-bleed banner — pick me too</div>
+
+  <div class="stack-trap">
+    <button class="button" data-agent-id="invite-teammates">Send Invite (z-index stack trap)</button>
+  </div>
+
+  <div class="scroll-box">
+    <div class="deep-item"><button id="deep-btn">Deeply scrolled button</button></div>
+  </div>
+
+  <form>
+    <label for="email">Email</label>
+    <input id="email" type="email" placeholder="you@example.com" value="should-never-be-sent@example.com" />
+    <label for="secret">Secret field</label>
+    <input id="secret" type="password" placeholder="Enter password" value="super-secret-value" />
+    <button type="submit" class="button">Submit form</button>
+  </form>
+
+  <p class="note">
+    Isolation stress test — deliberately clashing colors, colliding class names
+    (<code>.button</code>, <code>.popover</code>), z-index traps, and an aggressive
+    <code>* { all: revert }</code> reset. If the "?" fab, cursor, highlight box, and
+    popover all still render and work correctly here, the widget's Shadow DOM
+    boundary is holding. Requires <code>examples/proxy-cloudflare-worker</code>
+    running locally on port 8787.
+  </p>
+
+  <script src="../../dist/onboard-agent.global.js"></script>
+  <script>
+    OnboardAgent.init({
+      connector: "byo-endpoint",
+      endpoint: "http://localhost:8787",
+      token: new URLSearchParams(window.location.search).get("token") || undefined,
+      docsConfig: {
+        [window.location.pathname]: {
+          "invite-teammates": "Invites a teammate by email; they receive a link that expires in 7 days.",
+        },
+      },
+    });
+  </script>
+</body>
+</html>

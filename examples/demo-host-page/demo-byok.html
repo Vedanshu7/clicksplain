@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Harbor — onboard-agent demo (BYOK)</title>
+<link rel="stylesheet" href="shared-demo.css" />
+</head>
+<body>
+  <div class="shell">
+    <aside class="rail">
+      <div class="rail-brand">Harbor</div>
+      <nav class="rail-nav">
+        <a class="rail-link active" href="#">Overview</a>
+        <a class="rail-link" href="#">Team</a>
+        <a class="rail-link" href="#">Integrations</a>
+        <a class="rail-link" href="#">Billing</a>
+      </nav>
+      <div class="rail-footer">Harbor v2.4 · onboard-agent demo</div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <div>
+          <span class="eyebrow">WORKSPACE</span>
+          <h1>Acme team</h1>
+        </div>
+        <div class="topbar-actions">
+          <button class="icon-btn" id="notif-btn" aria-label="Notifications">🔔</button>
+          <button class="avatar-btn" id="avatar-btn" aria-label="Account">VJ</button>
+        </div>
+      </header>
+
+      <div class="banner" id="promo-banner">
+        <div>
+          <strong>Invite your whole team</strong>
+          <p>Harbor works best with your teammates in it. Add them in a couple of clicks.</p>
+        </div>
+        <button class="btn-light" id="banner-cta">Learn more</button>
+      </div>
+
+      <section class="grid">
+        <div class="card">
+          <div class="card-header">
+            <h2>Team members</h2>
+            <button class="btn btn-primary" data-agent-id="invite-teammates">Invite teammate</button>
+          </div>
+          <div class="member-list">
+            <div class="member-row">
+              <div class="member-info">
+                <span class="member-dot">SK</span> Sara Kim
+              </div>
+              <span class="member-role">Owner</span>
+            </div>
+            <div class="member-row">
+              <div class="member-info">
+                <span class="member-dot">JL</span> Jordan Lee
+              </div>
+              <span class="member-role">Admin</span>
+            </div>
+            <div class="member-row">
+              <div class="member-info">
+                <span class="member-dot">PR</span> Priya Rao
+              </div>
+              <span class="member-role">Member</span>
+            </div>
+            <div class="member-row">
+              <div class="member-info">
+                <span class="member-dot">TN</span> Theo Ng
+              </div>
+              <span class="member-role">Member</span>
+            </div>
+            <div class="member-row">
+              <div class="member-info">
+                <span class="member-dot">AB</span> Amina Bello
+              </div>
+              <button class="btn-ghost" id="remove-member-btn">Remove</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Quick actions</h2>
+          <div class="action-grid">
+            <button class="action-btn" id="new-project-btn">+ New project</button>
+            <button class="action-btn" id="connect-btn">Connect integration</button>
+            <button class="action-btn" id="export-btn">Export workspace data</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card form-card">
+        <h2>Add a teammate by email</h2>
+        <form id="invite-form">
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" type="email" placeholder="teammate@company.com" value="should-never-be-sent@example.com" />
+          </div>
+          <div class="field">
+            <label for="role">Role</label>
+            <select id="role">
+              <option>Member</option>
+              <option>Admin</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Send invite</button>
+        </form>
+      </section>
+    </div>
+  </div>
+
+  <p class="note">
+    <strong>BYOK connector demo.</strong> Pass a real test key via <code>?key=sk-ant-...</code> in
+    the URL (never hardcoded here) to see real streamed explanations, or load with no key to see
+    the graceful error path. Open the console to see the BYOK safety warning. Click the "?" button
+    bottom-right, then try the tagged <strong>Invite teammate</strong> button (instant, hardcoded),
+    an untagged action button (streams once, then caches), or the email form (triggers the
+    read-only DOM reasoning tool, since a form's own text never says what's inside it).
+  </p>
+
+  <script src="../../dist/onboard-agent.global.js"></script>
+  <script>
+    const apiKey = new URLSearchParams(window.location.search).get("key") || "";
+    OnboardAgent.init({
+      connector: "byok",
+      apiKey,
+      // Keyed off the current path dynamically so this demo works correctly
+      // however it's served (project root, subpath, different port, etc.) —
+      // in a real app you'd hardcode your actual route(s) here instead.
+      docsConfig: {
+        [window.location.pathname]: {
+          "invite-teammates": "Invites a teammate by email; they receive a link that expires in 7 days.",
+        },
+      },
+    });
+  </script>
+</body>
+</html>
