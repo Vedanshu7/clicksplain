@@ -1,4 +1,4 @@
-import { autoUpdate, computePosition, flip, offset, shift } from "@floating-ui/dom";
+import { autoPlacement, autoUpdate, computePosition, offset, shift } from "@floating-ui/dom";
 import { getShadowHost } from "./shadowHost";
 import { animateIn, animateOut } from "./animations";
 import { ChatPanel, type ChatSubmitHandler } from "./ChatPanel";
@@ -142,9 +142,19 @@ export class PopoverRenderer {
     if (!this.anchor) return;
     const scale = this.visible ? 1 : 0.96;
     void computePosition(this.anchor, this.panel, {
-      placement: "top",
       strategy: "fixed",
-      middleware: [offset(10), flip(), shift({ padding: 8 })],
+      // No hardcoded starting side. autoPlacement measures actual overflow
+      // for each candidate in allowedPlacements and picks whichever one
+      // genuinely fits — right first (least likely to cover neighboring
+      // content), falling through left/top/bottom only when right doesn't
+      // have room. This replaces the old placement:"top" + flip() pairing,
+      // which only ever had "bottom" as a fallback and so always landed
+      // below the element regardless of whether that was the best spot.
+      middleware: [
+        offset(10),
+        autoPlacement({ allowedPlacements: ["right", "left", "top", "bottom"], padding: 8 }),
+        shift({ padding: 8 }),
+      ],
     }).then(({ x, y }) => {
       this.panel.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
     });
