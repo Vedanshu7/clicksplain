@@ -1,0 +1,24 @@
+name = "onboard-agent-proxy"
+main = "src/index.ts"
+compatibility_date = "2026-01-01"
+
+[vars]
+# CORS restriction ONLY — a browser won't let JS read the response from a
+# disallowed origin. This does NOT stop curl/scripts from calling this endpoint
+# directly (CORS is enforced by browsers, not servers). Set to your real site's
+# origin before deploying to production, but pair it with WIDGET_TOKEN below —
+# that's the actual access control.
+ALLOWED_ORIGIN = "*"
+# "anthropic" (default) or "openai" — only one provider is active at a time.
+PROVIDER = "anthropic"
+# MODEL is optional for anthropic (defaults to claude-haiku-4-5), required for openai.
+# CHAT_MODEL is optional for both, falls back to MODEL if unset.
+MODEL = "claude-haiku-4-5"
+
+# Set the real secrets with:
+#   wrangler secret put API_KEY
+#   wrangler secret put WIDGET_TOKEN
+# API_KEY: the key for whichever PROVIDER is selected above.
+# WIDGET_TOKEN: shared secret the client must send as x-widget-token. Optional,
+# but strongly recommended before production — unset means this endpoint is
+# open to anyone who finds the URL. See README.md's security section.
