@@ -13,5 +13,5 @@ export function getContext(): { headers?: Record<string, string> } {
 }
 
 export function getVercelOidcToken(): never {
-  throw new Error("[onboard-agent] @vercel/oidc is stubbed out and not available in the browser build.");
+  throw new Error("[docent] @vercel/oidc is stubbed out and not available in the browser build.");
 }

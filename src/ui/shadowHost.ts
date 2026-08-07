@@ -1,7 +1,7 @@
 import shadowCss from "../style/shadow.css";
 
-const HOST_ID = "onboard-agent-host";
-const CURSOR_STYLE_ID = "onboard-agent-cursor-style";
+const HOST_ID = "docent-host";
+const CURSOR_STYLE_ID = "docent-cursor-style";
 
 export interface ShadowHost {
   hostElement: HTMLElement;

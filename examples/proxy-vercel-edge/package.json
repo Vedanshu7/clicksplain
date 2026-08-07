@@ -1,8 +1,8 @@
 {
-  "name": "onboard-agent-proxy-vercel-edge",
+  "name": "docent-proxy-vercel-edge",
   "private": true,
   "version": "0.1.0",
-  "description": "Reference BYO-endpoint proxy for onboard-agent. Deploy this in your own Vercel account.",
+  "description": "Reference BYO-endpoint proxy for docent. Deploy this in your own Vercel account.",
   "type": "module",
   "scripts": {
     "dev": "vercel dev",

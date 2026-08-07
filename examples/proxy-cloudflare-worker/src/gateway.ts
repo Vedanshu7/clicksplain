@@ -19,11 +19,11 @@ export function createModel(provider: Provider, modelId: string | undefined, api
   if (provider === "openai") {
     if (!modelId) {
       throw new Error(
-        '[onboard-agent proxy] PROVIDER=openai requires MODEL (and CHAT_MODEL) to be set explicitly — ' +
+        '[docent proxy] PROVIDER=openai requires MODEL (and CHAT_MODEL) to be set explicitly — ' +
           "see https://platform.openai.com/docs/models for current model ids."
       );
     }
     return createOpenAI({ apiKey })(modelId);
   }
-  throw new Error(`[onboard-agent proxy] unknown provider "${provider}"`);
+  throw new Error(`[docent proxy] unknown provider "${provider}"`);
 }

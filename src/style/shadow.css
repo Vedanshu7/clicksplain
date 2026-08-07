@@ -1,42 +1,42 @@
 /*
  * Public theme API — safe to override from the host page's own CSS (custom
  * properties inherit through the Shadow DOM boundary; `all: initial` below
- * does NOT reset them) or via OnboardAgent.init({ theme: {...} }), which sets
+ * does NOT reset them) or via Docent.init({ theme: {...} }), which sets
  * the same properties as an inline style on the mount element. See the root
  * README's "Theming" section.
  *
- *   --onboard-agent-accent            fab, active states, links, send button
- *   --onboard-agent-accent-active     hover/active shade of the accent
- *   --onboard-agent-accent-contrast   text/icon color drawn on top of the accent
- *   --onboard-agent-surface           popover/panel background
- *   --onboard-agent-border            hairlines, dividers, subtle fills
- *   --onboard-agent-text              body text color
- *   --onboard-agent-danger            error text
- *   --onboard-agent-radius            popover corner radius (chat/highlight
+ *   --docent-accent            fab, active states, links, send button
+ *   --docent-accent-active     hover/active shade of the accent
+ *   --docent-accent-contrast   text/icon color drawn on top of the accent
+ *   --docent-surface           popover/panel background
+ *   --docent-border            hairlines, dividers, subtle fills
+ *   --docent-text              body text color
+ *   --docent-danger            error text
+ *   --docent-radius            popover corner radius (chat/highlight
  *                                     radii scale proportionally from this)
- *   --onboard-agent-font-family       base font stack
+ *   --docent-font-family       base font stack
  */
 .oa-mount {
   all: initial;
-  font-family: var(--onboard-agent-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+  font-family: var(--docent-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
   font-size: 14px;
   line-height: 1.4;
-  color: var(--onboard-agent-text, #1a1a1a);
-  --oa-accent: var(--onboard-agent-accent, #5b5bf5);
-  --oa-accent-active: var(--onboard-agent-accent-active, #3f3fe0);
-  --oa-accent-contrast: var(--onboard-agent-accent-contrast, #ffffff);
-  --oa-surface: var(--onboard-agent-surface, #ffffff);
-  --oa-border: var(--onboard-agent-border, rgba(0, 0, 0, 0.1));
-  --oa-danger: var(--onboard-agent-danger, #e0475a);
-  --oa-radius: var(--onboard-agent-radius, 10px);
+  color: var(--docent-text, #1a1a1a);
+  --oa-accent: var(--docent-accent, #5b5bf5);
+  --oa-accent-active: var(--docent-accent-active, #3f3fe0);
+  --oa-accent-contrast: var(--docent-accent-contrast, #ffffff);
+  --oa-surface: var(--docent-surface, #ffffff);
+  --oa-border: var(--docent-border, rgba(0, 0, 0, 0.1));
+  --oa-danger: var(--docent-danger, #e0475a);
+  --oa-radius: var(--docent-radius, 10px);
   --oa-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
 }
 
 @media (prefers-color-scheme: dark) {
   .oa-mount {
-    color: var(--onboard-agent-text, #f2f2f2);
-    --oa-surface: var(--onboard-agent-surface, #26262c);
-    --oa-border: var(--onboard-agent-border, rgba(255, 255, 255, 0.12));
+    color: var(--docent-text, #f2f2f2);
+    --oa-surface: var(--docent-surface, #26262c);
+    --oa-border: var(--docent-border, rgba(255, 255, 255, 0.12));
     --oa-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
   }
 }

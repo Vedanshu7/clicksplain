@@ -26,11 +26,11 @@ export function createModel(provider: Provider, modelId: string | undefined, api
   if (provider === "openai") {
     if (!modelId) {
       throw new Error(
-        '[onboard-agent] provider "openai" requires a model to be set explicitly — ' +
+        '[docent] provider "openai" requires a model to be set explicitly — ' +
           "see https://platform.openai.com/docs/models for current model ids."
       );
     }
     return createOpenAI({ apiKey })(modelId);
   }
-  throw new Error(`[onboard-agent] unknown provider "${provider}"`);
+  throw new Error(`[docent] unknown provider "${provider}"`);
 }

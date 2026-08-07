@@ -108,7 +108,7 @@ export class ByokConnector implements AgentConnector {
 
     if (this.config.strictOrigins && !this.config.strictOrigins.includes(hostname)) {
       throw new Error(
-        `[onboard-agent] BYOK connector refused to initialize: "${hostname}" is not in ` +
+        `[docent] BYOK connector refused to initialize: "${hostname}" is not in ` +
           "strictOrigins. BYOK exposes your API key in the browser and must not run on " +
           "untrusted origins."
       );
@@ -120,7 +120,7 @@ export class ByokConnector implements AgentConnector {
       : `\n(Current host "${hostname}" does not look like a local dev host.)`;
 
     console.warn(
-      "%c⚠️ onboard-agent: BYOK mode is active",
+      "%c⚠️ docent: BYOK mode is active",
       "font-weight:bold;font-size:13px;",
       "\nYour LLM API key is sent directly from this page and is fully visible to anyone " +
         "via DevTools → Network. Use BYOK only for local development, prototyping, or " +

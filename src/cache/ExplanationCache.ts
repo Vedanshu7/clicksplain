@@ -19,7 +19,7 @@ interface CacheStore {
   entries: Record<string, Record<string, CacheEntry>>;
 }
 
-const STORAGE_KEY = "onboard-agent:cache:v1";
+const STORAGE_KEY = "docent:cache:v1";
 const DEFAULT_TTL_DAYS = 30;
 const DEFAULT_MAX_ENTRIES = 300;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
