@@ -1,0 +1,39 @@
+{
+  "name": "onboard-agent",
+  "version": "0.1.0",
+  "description": "Drop-in AI \"explain this UI\" onboarding widget. Client-side only, pluggable LLM connectors.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/onboard-agent.cjs",
+  "module": "./dist/onboard-agent.mjs",
+  "types": "./dist/onboard-agent.d.ts",
+  "unpkg": "./dist/onboard-agent.global.js",
+  "jsdelivr": "./dist/onboard-agent.global.js",
+  "exports": {
+    ".": {
+      "types": "./dist/onboard-agent.d.ts",
+      "import": "./dist/onboard-agent.mjs",
+      "require": "./dist/onboard-agent.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.34",
+    "@ai-sdk/openai": "^4.0.34",
+    "@floating-ui/dom": "^1.6.0",
+    "ai": "^7.0.56",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.5.0"
+  }
+}

@@ -1,0 +1,269 @@
+/*
+ * Public theme API — safe to override from the host page's own CSS (custom
+ * properties inherit through the Shadow DOM boundary; `all: initial` below
+ * does NOT reset them) or via OnboardAgent.init({ theme: {...} }), which sets
+ * the same properties as an inline style on the mount element. See the root
+ * README's "Theming" section.
+ *
+ *   --onboard-agent-accent            fab, active states, links, send button
+ *   --onboard-agent-accent-active     hover/active shade of the accent
+ *   --onboard-agent-accent-contrast   text/icon color drawn on top of the accent
+ *   --onboard-agent-surface           popover/panel background
+ *   --onboard-agent-border            hairlines, dividers, subtle fills
+ *   --onboard-agent-text              body text color
+ *   --onboard-agent-danger            error text
+ *   --onboard-agent-radius            popover corner radius (chat/highlight
+ *                                     radii scale proportionally from this)
+ *   --onboard-agent-font-family       base font stack
+ */
+.oa-mount {
+  all: initial;
+  font-family: var(--onboard-agent-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--onboard-agent-text, #1a1a1a);
+  --oa-accent: var(--onboard-agent-accent, #5b5bf5);
+  --oa-accent-active: var(--onboard-agent-accent-active, #3f3fe0);
+  --oa-accent-contrast: var(--onboard-agent-accent-contrast, #ffffff);
+  --oa-surface: var(--onboard-agent-surface, #ffffff);
+  --oa-border: var(--onboard-agent-border, rgba(0, 0, 0, 0.1));
+  --oa-danger: var(--onboard-agent-danger, #e0475a);
+  --oa-radius: var(--onboard-agent-radius, 10px);
+  --oa-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+}
+
+@media (prefers-color-scheme: dark) {
+  .oa-mount {
+    color: var(--onboard-agent-text, #f2f2f2);
+    --oa-surface: var(--onboard-agent-surface, #26262c);
+    --oa-border: var(--onboard-agent-border, rgba(255, 255, 255, 0.12));
+    --oa-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  }
+}
+
+.oa-mount * {
+  box-sizing: border-box;
+}
+
+/* Floating action button */
+.oa-fab {
+  all: unset;
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--oa-accent);
+  color: var(--oa-accent-contrast);
+  font-size: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: var(--oa-shadow);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.oa-fab:hover {
+  transform: scale(1.06);
+}
+
+.oa-fab.oa-active {
+  background: var(--oa-accent-active);
+  transform: scale(1.06) rotate(8deg);
+}
+
+/* Hover highlight overlay, DevTools-picker style. Tint/glow are derived from
+   --oa-accent via color-mix() rather than a fixed rgba(), so overriding the
+   accent color re-colors the glow too instead of leaving it stuck on the
+   default purple. */
+.oa-highlight-box {
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: none;
+  pointer-events: none;
+  border: 2px solid var(--oa-accent);
+  background: color-mix(in srgb, var(--oa-accent) 10%, transparent);
+  border-radius: calc(var(--oa-radius) * 0.8);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--oa-accent) 14%, transparent),
+    0 4px 16px color-mix(in srgb, var(--oa-accent) 25%, transparent);
+  transition: transform 0.08s ease-out, width 0.08s ease-out, height 0.08s ease-out, opacity 0.1s ease-out;
+  z-index: 1;
+}
+
+.oa-highlight-badge {
+  position: absolute;
+  top: -26px;
+  left: 0;
+  background: var(--oa-accent);
+  color: var(--oa-accent-contrast);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 5px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  box-shadow: var(--oa-shadow);
+}
+
+.oa-highlight-badge.oa-highlight-badge-inside {
+  top: 6px;
+  left: 6px;
+}
+
+/* Popover */
+.oa-popover {
+  position: fixed;
+  top: 0;
+  left: 0;
+  max-width: 320px;
+  min-width: 220px;
+  background: var(--oa-surface);
+  border: 1px solid var(--oa-border);
+  border-radius: var(--oa-radius);
+  box-shadow: var(--oa-shadow);
+  padding: 14px 16px;
+  pointer-events: none;
+  opacity: 0;
+  /* transform (translate+scale) is fully owned by PopoverRenderer/animations.ts,
+     since it also encodes floating-ui's computed anchor position. */
+  transition: opacity 0.14s ease, transform 0.14s ease;
+  z-index: 2;
+}
+
+.oa-popover.oa-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.oa-popover-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding-right: 10px;
+}
+
+.oa-popover-content.oa-loading::after {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.5;
+  animation: oa-pulse 1s infinite ease-in-out;
+}
+
+@keyframes oa-pulse {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.9; }
+}
+
+.oa-popover-error {
+  color: var(--oa-danger);
+}
+
+.oa-popover-close {
+  all: unset;
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  opacity: 0.5;
+  pointer-events: auto;
+}
+
+.oa-popover-close:hover {
+  opacity: 1;
+}
+
+/* Follow-up chat */
+.oa-popover-chat {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--oa-border);
+}
+
+.oa-popover-chat-turns {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.oa-popover-chat-turns:empty {
+  margin-bottom: 0;
+}
+
+.oa-popover-chat-turn {
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding: 6px 8px;
+  border-radius: calc(var(--oa-radius) * 0.6);
+}
+
+.oa-popover-chat-turn-user {
+  background: var(--oa-border);
+  align-self: flex-end;
+  max-width: 90%;
+}
+
+.oa-popover-chat-turn-assistant {
+  align-self: flex-start;
+  max-width: 90%;
+}
+
+.oa-popover-chat-error {
+  color: var(--oa-danger);
+  align-self: flex-start;
+}
+
+.oa-popover-chat-form {
+  display: flex;
+  gap: 6px;
+}
+
+.oa-popover-chat-input {
+  all: unset;
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  padding: 6px 8px;
+  border: 1px solid var(--oa-border);
+  border-radius: calc(var(--oa-radius) * 0.6);
+  pointer-events: auto;
+}
+
+.oa-popover-chat-input:disabled {
+  opacity: 0.6;
+}
+
+.oa-popover-chat-send {
+  all: unset;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: calc(var(--oa-radius) * 0.6);
+  background: var(--oa-accent);
+  color: var(--oa-accent-contrast);
+  cursor: pointer;
+  pointer-events: auto;
+  text-align: center;
+}
+
+.oa-popover-chat-send:hover:not(:disabled) {
+  background: var(--oa-accent-active);
+}
+
+.oa-popover-chat-send:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
