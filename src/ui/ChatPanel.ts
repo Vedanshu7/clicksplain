@@ -14,6 +14,7 @@ export class ChatPanel {
   private readonly sendButton: HTMLButtonElement;
   private onSubmit: ChatSubmitHandler | null = null;
   private activeAssistantTurn: HTMLDivElement | null = null;
+  private loadingTurn: HTMLDivElement | null = null;
 
   constructor(mount: HTMLElement) {
     this.root = document.createElement("div");
@@ -56,7 +57,23 @@ export class ChatPanel {
     this.turnsList.appendChild(turn);
   }
 
+  /** Shows a small generative-blob placeholder turn while waiting for the first token. */
+  private showLoadingTurn(): void {
+    this.loadingTurn = document.createElement("div");
+    this.loadingTurn.className = "oa-popover-chat-turn oa-popover-chat-turn-assistant oa-popover-chat-turn-loading";
+    const blob = document.createElement("div");
+    blob.className = "oa-loading-blob oa-loading-blob-sm";
+    this.loadingTurn.appendChild(blob);
+    this.turnsList.appendChild(this.loadingTurn);
+  }
+
+  private clearLoadingTurn(): void {
+    this.loadingTurn?.remove();
+    this.loadingTurn = null;
+  }
+
   appendAssistantDelta(text: string): void {
+    this.clearLoadingTurn();
     if (!this.activeAssistantTurn) {
       this.activeAssistantTurn = document.createElement("div");
       this.activeAssistantTurn.className = "oa-popover-chat-turn oa-popover-chat-turn-assistant";
@@ -71,6 +88,7 @@ export class ChatPanel {
   }
 
   setError(message: string): void {
+    this.clearLoadingTurn();
     const turn = document.createElement("div");
     turn.className = "oa-popover-chat-turn oa-popover-chat-error";
     turn.textContent = message;
@@ -83,6 +101,7 @@ export class ChatPanel {
   reset(): void {
     this.onSubmit = null;
     this.activeAssistantTurn = null;
+    this.loadingTurn = null;
     this.turnsList.replaceChildren();
     this.input.value = "";
     this.setSubmitting(false);
@@ -102,6 +121,7 @@ export class ChatPanel {
     this.addUserTurn(question);
     this.input.value = "";
     this.setSubmitting(true);
+    this.showLoadingTurn();
     this.onSubmit(question);
   };
 }

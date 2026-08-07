@@ -45,7 +45,20 @@
   box-sizing: border-box;
 }
 
-/* Floating action button */
+/* --oa-spin-angle (used by the conic-gradient animations below) is registered
+   as an interpolatable <angle> via @property in shadowHost.ts's light-DOM
+   style tag, NOT here — @property registrations are document-scoped, so one
+   declared inside this shadow-root stylesheet silently fails to register
+   (confirmed empirically: the gradient computed to `none` until moved).
+   Consuming the registered property via var() from in here works fine once
+   it's registered light-side. Unsupported browsers keep a static gradient;
+   everything else in this file still works. */
+
+/* Floating action button. Idle state carries a slow, low-contrast animated
+   gradient + soft breathing glow — a small ambient hint that this is alive
+   and AI-powered, not a static icon. Turned off while actively inspecting
+   (.oa-active) so it doesn't compete with the highlight box/popover for
+   attention during real use. */
 .oa-fab {
   all: unset;
   position: fixed;
@@ -54,7 +67,12 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: var(--oa-accent);
+  background: conic-gradient(
+    from var(--oa-spin-angle),
+    var(--oa-accent),
+    color-mix(in srgb, var(--oa-accent) 80%, white) 50%,
+    var(--oa-accent)
+  );
   color: var(--oa-accent-contrast);
   font-size: 20px;
   font-weight: 700;
@@ -65,6 +83,7 @@
   pointer-events: auto;
   box-shadow: var(--oa-shadow);
   transition: transform 0.15s ease, background 0.15s ease;
+  animation: oa-spin 9s linear infinite, oa-fab-breathe 3.2s ease-in-out infinite;
 }
 
 .oa-fab:hover {
@@ -74,6 +93,29 @@
 .oa-fab.oa-active {
   background: var(--oa-accent-active);
   transform: scale(1.06) rotate(8deg);
+  animation: none;
+}
+
+@keyframes oa-spin {
+  to {
+    --oa-spin-angle: 360deg;
+  }
+}
+
+@keyframes oa-fab-breathe {
+  0%, 100% {
+    box-shadow: var(--oa-shadow);
+  }
+  50% {
+    box-shadow: var(--oa-shadow), 0 0 14px 2px color-mix(in srgb, var(--oa-accent) 45%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oa-fab {
+    animation: none;
+    background: var(--oa-accent);
+  }
 }
 
 /* Hover highlight overlay, DevTools-picker style. Tint/glow are derived from
@@ -147,21 +189,50 @@
   padding-right: 10px;
 }
 
-.oa-popover-content.oa-loading::after {
-  content: "";
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  margin-left: 4px;
-  border-radius: 50%;
-  background: currentColor;
-  opacity: 0.5;
-  animation: oa-pulse 1s infinite ease-in-out;
+/* Generative "thinking" indicator — a small blurred gradient blob that
+   continuously morphs shape while its gradient rotates, shown only during
+   the (usually brief) gap between opening the popover/submitting a chat
+   question and the first streamed token arriving. Colored from --oa-accent,
+   so it themes automatically. */
+.oa-loading-blob {
+  --oa-blob-size: 30px;
+  width: var(--oa-blob-size);
+  height: var(--oa-blob-size);
+  margin: 4px 0;
+  background: conic-gradient(
+    from var(--oa-spin-angle),
+    var(--oa-accent),
+    color-mix(in srgb, var(--oa-accent) 35%, white),
+    var(--oa-accent-active),
+    var(--oa-accent)
+  );
+  filter: blur(5px);
+  animation: oa-spin 3.5s linear infinite, oa-blob-morph 2.6s ease-in-out infinite;
 }
 
-@keyframes oa-pulse {
-  0%, 100% { opacity: 0.25; }
-  50% { opacity: 0.9; }
+.oa-loading-blob-sm {
+  --oa-blob-size: 16px;
+  filter: blur(3px);
+}
+
+@keyframes oa-blob-morph {
+  0%, 100% { border-radius: 42% 58% 65% 35% / 45% 45% 55% 55%; }
+  25% { border-radius: 58% 42% 35% 65% / 55% 65% 35% 45%; }
+  50% { border-radius: 50% 50% 40% 60% / 60% 40% 60% 40%; }
+  75% { border-radius: 35% 65% 55% 45% / 40% 55% 45% 60%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oa-loading-blob {
+    animation: oa-blob-fade 1.4s ease-in-out infinite;
+    filter: blur(2px);
+    border-radius: 50%;
+  }
+}
+
+@keyframes oa-blob-fade {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
 }
 
 .oa-popover-error {
@@ -219,6 +290,12 @@
 .oa-popover-chat-turn-assistant {
   align-self: flex-start;
   max-width: 90%;
+}
+
+.oa-popover-chat-turn-loading {
+  display: flex;
+  align-items: center;
+  padding: 8px;
 }
 
 .oa-popover-chat-error {

@@ -12,6 +12,7 @@ export class PopoverRenderer {
   private readonly hostElement: HTMLElement;
   private readonly panel: HTMLDivElement;
   private readonly closeButton: HTMLButtonElement;
+  private readonly loadingBlob: HTMLDivElement;
   private readonly content: HTMLDivElement;
   private readonly chatPanel: ChatPanel;
   private readonly closeHandlers = new Set<() => void>();
@@ -35,10 +36,14 @@ export class PopoverRenderer {
     this.closeButton.textContent = "✕";
     this.closeButton.addEventListener("click", () => this.close());
 
+    this.loadingBlob = document.createElement("div");
+    this.loadingBlob.className = "oa-loading-blob";
+    this.loadingBlob.style.display = "none";
+
     this.content = document.createElement("div");
     this.content.className = "oa-popover-content";
 
-    this.panel.append(this.closeButton, this.content);
+    this.panel.append(this.closeButton, this.loadingBlob, this.content);
     this.chatPanel = new ChatPanel(this.panel);
     mount.appendChild(this.panel);
 
@@ -54,7 +59,7 @@ export class PopoverRenderer {
     this.anchor = anchor;
     this.content.textContent = "";
     this.content.classList.remove("oa-popover-error");
-    this.content.classList.add("oa-loading");
+    this.loadingBlob.style.display = "block";
     this.chatPanel.reset();
 
     this.stopAutoUpdate?.();
@@ -66,28 +71,29 @@ export class PopoverRenderer {
     requestAnimationFrame(() => this.reposition());
   }
 
-  /** Appends a streamed text chunk, clearing the loading state on first content. */
+  /** Appends a streamed text chunk, hiding the loading blob on first content. */
   appendText(text: string): void {
-    this.content.classList.remove("oa-loading");
+    this.loadingBlob.style.display = "none";
     this.content.textContent += text;
     this.reposition();
   }
 
   /** Instant, non-streaming display for a docsConfig or cache hit — no loading state at all. */
   setContent(text: string): void {
-    this.content.classList.remove("oa-loading", "oa-popover-error");
+    this.loadingBlob.style.display = "none";
+    this.content.classList.remove("oa-popover-error");
     this.content.textContent = text;
     this.reposition();
   }
 
   setError(message: string): void {
-    this.content.classList.remove("oa-loading");
+    this.loadingBlob.style.display = "none";
     this.content.textContent = message;
     this.content.classList.add("oa-popover-error");
   }
 
   complete(): void {
-    this.content.classList.remove("oa-loading");
+    this.loadingBlob.style.display = "none";
   }
 
   /** Reveals the follow-up chat box, armed with the given submit handler for this popover session. */

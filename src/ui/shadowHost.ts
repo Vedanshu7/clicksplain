@@ -1,7 +1,7 @@
 import shadowCss from "../style/shadow.css";
 
 const HOST_ID = "docent-host";
-const CURSOR_STYLE_ID = "docent-cursor-style";
+const GLOBAL_STYLE_ID = "docent-global-style";
 
 export interface ShadowHost {
   hostElement: HTMLElement;
@@ -37,7 +37,7 @@ export function getShadowHost(): ShadowHost {
   mount.className = "oa-mount";
   root.appendChild(mount);
 
-  injectCursorStyle();
+  injectGlobalStyle();
 
   cached = { hostElement, root, mount };
   return cached;
@@ -52,14 +52,25 @@ const CURSOR_SVG =
   "stroke='white' stroke-width='2'/%3E%3Ctext x='14' y='19' font-family='Arial,sans-serif' " +
   "font-size='15' font-weight='bold' fill='white' text-anchor='middle'%3E%3F%3C/text%3E%3C/svg%3E";
 
-// The custom inspect-mode cursor is the one deliberate exception to shadow isolation:
-// it must apply to the host page itself, so it lives in a light-DOM <style>, scoped to
-// a single toggled class rather than leaking any other rule.
-function injectCursorStyle(): void {
-  if (document.getElementById(CURSOR_STYLE_ID)) return;
+// Two things that must live in a light-DOM <style> rather than the shadow
+// root's own stylesheet, for two different reasons:
+//  - the inspect-mode cursor has to apply to the host page itself, since a
+//    shadow root's styles never reach outside its own tree;
+//  - @property registrations are document-scoped — declaring one inside a
+//    shadow root's stylesheet silently fails to register it (confirmed: the
+//    conic-gradient animation in shadow.css computed to `none` until this
+//    moved here), even though consuming the registered property via var()
+//    from inside the shadow tree works fine once it's registered light-side.
+function injectGlobalStyle(): void {
+  if (document.getElementById(GLOBAL_STYLE_ID)) return;
   const style = document.createElement("style");
-  style.id = CURSOR_STYLE_ID;
+  style.id = GLOBAL_STYLE_ID;
   style.textContent = `
+    @property --oa-spin-angle {
+      syntax: "<angle>";
+      initial-value: 0deg;
+      inherits: false;
+    }
     body.oa-inspecting, body.oa-inspecting * {
       cursor: url("${CURSOR_SVG}") 14 14, help !important;
     }
