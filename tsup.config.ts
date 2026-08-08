@@ -21,7 +21,7 @@ export default defineConfig({
   },
   esbuildOptions(options, context) {
     // Only the IIFE build fully bundles dependencies (ESM/CJS keep them external
-    // for consumers' own bundlers) — @vercel/oidc (a Node-only, unused-by-us
+    // for consumers' own bundlers): @vercel/oidc (a Node-only, unused-by-us
     // transitive dep of `ai` -> @ai-sdk/gateway) only needs stubbing there. See
     // src/stubs/vercel-oidc-stub.ts for why this is safe.
     if (context.format === "iife") {

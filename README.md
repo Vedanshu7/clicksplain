@@ -3,12 +3,12 @@
 [![npm version](https://img.shields.io/npm/v/clicksplain.svg)](https://www.npmjs.com/package/clicksplain)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-A drop-in, AI-powered "explain this UI" widget. Click the "?" button, then click any element on the page to get an LLM-generated explanation of what it does — rendered in an animated popover anchored to the element.
+A drop-in, AI-powered "explain this UI" widget. Click the "?" button, then click any element on the page to get an LLM-generated explanation of what it does: rendered in an animated popover anchored to the element.
 
 100% client-side library, no backend we run. Ships two ways to connect an LLM:
 
-- **BYOK** — pass a raw API key directly (dev/prototyping only, key is visible in the browser).
-- **BYO-endpoint** — point at your own tiny proxy (recommended for production). Reference templates for Cloudflare Workers and Vercel Edge Functions are in `examples/`.
+- **BYOK**: pass a raw API key directly (dev/prototyping only, key is visible in the browser).
+- **BYO-endpoint**: point at your own tiny proxy (recommended for production). Reference templates for Cloudflare Workers and Vercel Edge Functions are in `examples/`.
 
 ## Quick start
 
@@ -30,11 +30,11 @@ See `examples/demo-host-page/` for a working local demo of both connector modes.
 
 Every color, radius, and font in the widget (fab, cursor badge, hover highlight
 box, popover, chat) is a CSS custom property, and custom properties inherit
-through the widget's Shadow DOM boundary — so your site's own CSS can restyle
+through the widget's Shadow DOM boundary, so your site's own CSS can restyle
 it with zero JavaScript:
 
 ```css
-/* your site's own stylesheet — no clicksplain-specific setup needed */
+/* your site's own stylesheet: no clicksplain-specific setup needed */
 :root {
   --clicksplain-accent: #16a34a;         /* fab, active states, links, send button */
   --clicksplain-accent-active: #15803d;  /* hover/active shade of the accent */
@@ -43,7 +43,7 @@ it with zero JavaScript:
   --clicksplain-border: rgba(34, 197, 94, 0.35); /* hairlines, dividers, subtle fills */
   --clicksplain-text: #dcfce7;           /* body text color */
   --clicksplain-danger: #dc2626;         /* error text */
-  --clicksplain-radius: 4px;             /* popover corner radius — chat/highlight
+  --clicksplain-radius: 4px;             /* popover corner radius: chat/highlight
                                         radii scale proportionally from this */
   --clicksplain-font-family: "Inter", sans-serif;
 }
@@ -53,7 +53,7 @@ Any property you don't set keeps its default (and its own light/dark-mode
 default, matched to `prefers-color-scheme`).
 
 If you're using `Clicksplain.init()` rather than the plain `<script data-*>`
-tag, you can also set the same properties programmatically — useful for
+tag, you can also set the same properties programmatically: useful for
 per-tenant branding fetched at runtime. A JS `theme` value always wins over a
 host-page CSS override of the same property, which in turn wins over the
 built-in default:
@@ -69,7 +69,7 @@ Clicksplain.init({
 });
 ```
 
-`theme` isn't available via the `<script data-*>` auto-init path — use
+`theme` isn't available via the `<script data-*>` auto-init path: use
 host-page CSS custom properties there instead, which need no JS either way.
 
 ## Status
@@ -79,7 +79,7 @@ reasoning loop are built and verified against both connector modes.
 
 ## Contributing
 
-Bug reports, feature discussion, and PRs are welcome — see
+Bug reports, feature discussion, and PRs are welcome: see
 [CONTRIBUTING.md](./CONTRIBUTING.md) for the dev setup and process, and
 [CODE_STYLE.md](./CODE_STYLE.md) for how the code here is written.
 

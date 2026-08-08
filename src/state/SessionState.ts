@@ -32,7 +32,7 @@ export class SessionState extends EventTarget {
   }
 
   /**
-   * Same single-abort-slot design as beginExplain — a chat submit cancels any
+   * Same single-abort-slot design as beginExplain: a chat submit cancels any
    * leftover explain stream or prior in-flight chat turn, and a new pick's
    * beginExplain() cancels any in-flight chat turn from the previous element.
    */

@@ -1,5 +1,5 @@
 /*
- * Public theme API — safe to override from the host page's own CSS (custom
+ * Public theme API: safe to override from the host page's own CSS (custom
  * properties inherit through the Shadow DOM boundary; `all: initial` below
  * does NOT reset them) or via Clicksplain.init({ theme: {...} }), which sets
  * the same properties as an inline style on the mount element. See the root
@@ -47,7 +47,7 @@
 
 /* --oa-spin-angle (used by the conic-gradient animations below) is registered
    as an interpolatable <angle> via @property in shadowHost.ts's light-DOM
-   style tag, NOT here — @property registrations are document-scoped, so one
+   style tag, NOT here: @property registrations are document-scoped, so one
    declared inside this shadow-root stylesheet silently fails to register
    (confirmed empirically: the gradient computed to `none` until moved).
    Consuming the registered property via var() from in here works fine once
@@ -55,7 +55,7 @@
    everything else in this file still works. */
 
 /* Floating action button. Idle state carries a slow, low-contrast animated
-   gradient + soft breathing glow — a small ambient hint that this is alive
+   gradient + soft breathing glow: a small ambient hint that this is alive
    and AI-powered, not a static icon. Turned off while actively inspecting
    (.oa-active) so it doesn't compete with the highlight box/popover for
    attention during real use. */
@@ -189,7 +189,7 @@
   padding-right: 10px;
 }
 
-/* Generative "thinking" indicator — a small blurred gradient blob that
+/* Generative "thinking" indicator: a small blurred gradient blob that
    continuously morphs shape while its gradient rotates, shown only during
    the (usually brief) gap between opening the popover/submitting a chat
    question and the first streamed token arriving. Colored from --oa-accent,

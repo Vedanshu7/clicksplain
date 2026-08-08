@@ -78,7 +78,7 @@ export class PopoverRenderer {
     this.reposition();
   }
 
-  /** Instant, non-streaming display for a docsConfig or cache hit — no loading state at all. */
+  /** Instant, non-streaming display for a docsConfig or cache hit: no loading state at all. */
   setContent(text: string): void {
     this.loadingBlob.style.display = "none";
     this.content.classList.remove("oa-popover-error");
@@ -145,7 +145,7 @@ export class PopoverRenderer {
       strategy: "fixed",
       // No hardcoded starting side. autoPlacement measures actual overflow
       // for each candidate in allowedPlacements and picks whichever one
-      // genuinely fits — right first (least likely to cover neighboring
+      // genuinely fits: right first (least likely to cover neighboring
       // content), falling through left/top/bottom only when right doesn't
       // have room. This replaces the old placement:"top" + flip() pairing,
       // which only ever had "bottom" as a fallback and so always landed

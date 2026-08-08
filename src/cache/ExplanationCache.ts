@@ -26,7 +26,7 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 /**
  * localStorage-backed cache of previously-generated explanations, keyed by
- * (route, element signature) — mirrors DocsConfig's route -> key -> value shape
+ * (route, element signature): mirrors DocsConfig's route -> key -> value shape
  * from TaggingResolver.ts. Every read/write is wrapped in try/catch: a full or
  * unavailable localStorage (Safari private browsing, quota exceeded) degrades
  * to "always miss" rather than ever throwing into the pick flow.
@@ -67,7 +67,7 @@ export class ExplanationCache {
     evictOverflow(store, this.maxEntries);
 
     if (!writeStore(store)) {
-      // Likely QuotaExceededError — drop the oldest ~20% and retry once, then give up silently.
+      // Likely QuotaExceededError: drop the oldest ~20% and retry once, then give up silently.
       evictOverflow(store, Math.floor(this.maxEntries * 0.8));
       writeStore(store);
     }

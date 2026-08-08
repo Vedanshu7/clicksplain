@@ -8,17 +8,17 @@ export interface ByokConnectorConfig {
   apiKey: string;
   provider?: Provider;
   model?: string;
-  /** Independently configurable from `model` — falls back to it if unset. */
+  /** Independently configurable from `model`: falls back to it if unset. */
   chatModel?: string;
   /**
    * If set, the connector refuses to initialize on any hostname not in this list.
-   * Opt-in enforcement — we don't guess at what counts as "safe" by default.
+   * Opt-in enforcement: we don't guess at what counts as "safe" by default.
    */
   strictOrigins?: string[];
 }
 
 const MAX_TOKENS = 400;
-// 1 initial step + 1 tool-augmented follow-up — bounds cost/latency to at most
+// 1 initial step + 1 tool-augmented follow-up: bounds cost/latency to at most
 // one inspect_children round-trip per explain/chat call. Matches the byo-endpoint
 // relay loop's own bound (see ByoEndpointConnector.ts) for consistent behavior
 // regardless of which connector is configured.
@@ -27,7 +27,7 @@ const DEV_HOSTNAME_PATTERNS = [/^localhost$/, /^127\.0\.0\.1$/, /\.local$/];
 
 /**
  * `result.textStream` deliberately excludes error parts (per the AI SDK's own
- * docs on StreamTextResult) — a mid-stream provider error (bad model id, rate
+ * docs on StreamTextResult): a mid-stream provider error (bad model id, rate
  * limit, etc.) ends that stream silently with zero chunks and zero thrown
  * exception. We iterate the full `result.stream` instead and throw explicitly
  * on an error part, so AgentConnector's error contract (callers wrap explain/
@@ -37,7 +37,7 @@ async function* textDeltasOrThrow(
   result: { stream: AsyncIterable<{ type: string; text?: string; error?: unknown }> }
 ): AsyncIterable<string> {
   // Prompting the model to leave a blank line after its "let me check..." preamble
-  // and before the real answer proved unreliable (verified against the live API —
+  // and before the real answer proved unreliable (verified against the live API,
   // it consistently runs them together with no separator). Injecting the break here
   // instead, at the one point we can detect precisely: the first text-delta of a new
   // step right after a tool-call is the start of the real answer.
@@ -60,7 +60,7 @@ async function* textDeltasOrThrow(
 
 /**
  * Calls the LLM provider directly from the browser using a raw API key.
- * Zero backend, but the key is fully visible via DevTools → Network — see the
+ * Zero backend, but the key is fully visible via DevTools → Network: see the
  * console warning below. Intended for local dev, prototyping, and internal
  * tools behind auth, never a public production site (use ByoEndpointConnector there).
  */
@@ -124,7 +124,7 @@ export class ByokConnector implements AgentConnector {
       "font-weight:bold;font-size:13px;",
       "\nYour LLM API key is sent directly from this page and is fully visible to anyone " +
         "via DevTools → Network. Use BYOK only for local development, prototyping, or " +
-        "internal tools behind auth — never on a public production site. For production, " +
+        "internal tools behind auth, never on a public production site. For production, " +
         "use the 'byo-endpoint' connector instead." +
         hostWarning
     );

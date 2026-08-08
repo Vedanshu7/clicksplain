@@ -22,7 +22,7 @@ const IMPLICIT_ROLE_BY_TAG: Record<string, string> = {
 /**
  * Tier-1 zero-config context: pulls whatever semantic signal is already on the
  * element (ARIA, labels, nearby text, tag) without requiring any developer setup.
- * Never reads input `.value` — only placeholder/label text — so user-entered
+ * Never reads input `.value` (only placeholder/label text), so user-entered
  * data is never sent as context.
  */
 export function extractElementInfo(element: Element): ElementInfo {
@@ -94,7 +94,7 @@ function resolveNearbyText(element: Element): string | null {
   return null;
 }
 
-// Only text nodes that are direct children — avoids pulling in unrelated text
+// Only text nodes that are direct children: avoids pulling in unrelated text
 // from deeply nested descendants.
 function directOwnText(element: Element): string | null {
   let text = "";

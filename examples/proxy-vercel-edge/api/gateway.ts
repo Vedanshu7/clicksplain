@@ -7,13 +7,13 @@ export type Provider = "anthropic" | "openai";
 const DEFAULT_ANTHROPIC_MODEL = "claude-haiku-4-5";
 
 /**
- * Server-side model factory (no anthropic-dangerous-direct-browser-access header —
+ * Server-side model factory (no anthropic-dangerous-direct-browser-access header:
  * that header exists specifically to gate browser-origin calls; this runs server-side).
  * `modelId` is required for "openai" since there's no safely-verifiable cheap default
- * to hardcode here — model catalogs churn faster than this file does.
+ * to hardcode here: model catalogs churn faster than this file does.
  *
  * Same shape as the Cloudflare Worker example's gateway.ts, intentionally duplicated
- * rather than shared — each reference proxy is a standalone deployable the adopter owns.
+ * rather than shared: each reference proxy is a standalone deployable the adopter owns.
  */
 export function createModel(provider: Provider, modelId: string | undefined, apiKey: string): LanguageModel {
   if (provider === "anthropic") {
@@ -22,7 +22,7 @@ export function createModel(provider: Provider, modelId: string | undefined, api
   if (provider === "openai") {
     if (!modelId) {
       throw new Error(
-        '[clicksplain proxy] PROVIDER=openai requires MODEL (and CHAT_MODEL) to be set explicitly — ' +
+        '[clicksplain proxy] PROVIDER=openai requires MODEL (and CHAT_MODEL) to be set explicitly: ' +
           "see https://platform.openai.com/docs/models for current model ids."
       );
     }

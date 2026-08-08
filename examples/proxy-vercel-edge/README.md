@@ -1,4 +1,4 @@
-# clicksplain reference proxy — Vercel Edge Function
+# clicksplain reference proxy: Vercel Edge Function
 
 Same canonical protocol and behavior as `examples/proxy-cloudflare-worker` (via
 the [Vercel AI SDK](https://ai-sdk.dev), supporting Anthropic or OpenAI), for
@@ -18,9 +18,9 @@ its own Vercel project directly.
 
 Only one provider is active at a time, picked via `PROVIDER` (`"anthropic"` by
 default, or `"openai"`). `API_KEY` always holds the key for *whichever*
-provider is currently selected — there's no separate key per provider. `MODEL`
+provider is currently selected; there's no separate key per provider. `MODEL`
 is optional for anthropic (defaults to `claude-haiku-4-5`) but required for
-openai — the model catalog changes too often to safely hardcode a default.
+openai: the model catalog changes too often to safely hardcode a default.
 `CHAT_MODEL` is optional for both and falls back to `MODEL`.
 
 ### Local key (for `vercel dev`)
@@ -37,23 +37,23 @@ cp .env.local.example .env.local
 
 Set these in your Vercel project's environment variables settings:
 `API_KEY`, `PROVIDER` (optional), `MODEL`, `CHAT_MODEL` (optional),
-`ALLOWED_ORIGIN`, and `WIDGET_TOKEN` — see **Security** below before deploying.
+`ALLOWED_ORIGIN`, and `WIDGET_TOKEN`: see **Security** below before deploying.
 
-## Security — read before deploying to production
+## Security: read before deploying to production
 
 This endpoint holds a real, billable LLM API key. Two things you need before
 going live:
 
 **`ALLOWED_ORIGIN` is CORS, not access control.** CORS is enforced by
-*browsers* — it stops a browser from letting JS on a disallowed origin read
+*browsers*: it stops a browser from letting JS on a disallowed origin read
 the response. It does **not** stop `curl`, a script, or any non-browser client
 from calling this endpoint directly and getting billed. The endpoint URL also
 isn't a secret: it ships verbatim in your site's client-side bundle
 (`Clicksplain.init({ endpoint: "..." })`), visible to anyone via view-source.
-Still set `ALLOWED_ORIGIN` to your real site's origin before deploying — it's
-a real (if partial) restriction — but don't treat it as the security boundary.
+Still set `ALLOWED_ORIGIN` to your real site's origin before deploying (it's
+a real, if partial, restriction), but don't treat it as the security boundary.
 
-**Set `WIDGET_TOKEN` — this is the actual access control.** Add it as a Vercel
+**Set `WIDGET_TOKEN`, the actual access control.** Add it as a Vercel
 environment variable, then pass the same value on the client:
 
 ```js
@@ -65,9 +65,9 @@ Clicksplain.init({
 ```
 
 The proxy rejects any request missing a matching `x-widget-token` header with
-`401`. This is defense-in-depth, not a cryptographic guarantee — the token is
+`401`. This is defense-in-depth, not a cryptographic guarantee: the token is
 visible in your site's client bundle to a sufficiently determined attacker,
-same as any client-embedded credential — but it stops the realistic threat
+same as any client-embedded credential, but it stops the realistic threat
 here (scripts crawling for open, unauthenticated proxy endpoints). Left
 optional so local `vercel dev` keeps working with zero config; if unset, the
 function logs a warning on every request reminding you it's open.
@@ -75,19 +75,19 @@ function logs a warning on every request reminding you it's open.
 **Rate limiting is not built in.** Even with `WIDGET_TOKEN` set, someone who
 obtains the token (or an authenticated-but-malicious caller) could still send
 requests in volume. Use [Vercel's WAF/rate limiting](https://vercel.com/docs/security/vercel-waf/rate-limiting)
-rather than hand-rolling one here — dashboard-configured limits are easier to
+rather than hand-rolling one here: dashboard-configured limits are easier to
 tune than code you'd have to redeploy.
 
 **Known residual limitation:** the DOM-reasoning-loop's `toolExchange` field
 (see below) is client-supplied and only size/shape-validated, not
-cryptographically tied to a real prior tool call — an authenticated caller
+cryptographically tied to a real prior tool call; an authenticated caller
 could still fabricate its contents. Full protection would require server-side
 session state, which this stateless function deliberately doesn't keep. In
 practice the LLM's own output is only ever rendered as plain text on the
 client (never HTML), so the impact of this is cost/content-policy risk, not
 code execution.
 
-**Before you deploy — checklist:**
+**Pre-deploy checklist:**
 - [ ] `ALLOWED_ORIGIN` set to your real origin, not `*`
 - [ ] `WIDGET_TOKEN` set, and the same value passed to `Clicksplain.init()`
 - [ ] Rate limiting configured on the platform side (Vercel dashboard)
@@ -118,5 +118,5 @@ npm run deploy
 
 Identical to the Cloudflare Worker template, including the `mode: "explain" | "chat"`
 discriminator, zod-validated request bodies with generic client-facing error
-messages, and the bounded read-only DOM reasoning loop — see
+messages, and the bounded read-only DOM reasoning loop: see
 `examples/proxy-cloudflare-worker/README.md`.

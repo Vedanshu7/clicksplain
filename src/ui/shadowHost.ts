@@ -26,7 +26,7 @@ export function getShadowHost(): ShadowHost {
 
   // "open" rather than "closed": style/DOM encapsulation is identical either way,
   // and open lets adopters' own e2e tests (and our own debugging) reach the widget's
-  // internals via element.shadowRoot — there's no real host page adversary to defend
+  // internals via element.shadowRoot, and there's no real host page adversary to defend
   // against here, since the adopter controls the host page by definition.
   const root = hostElement.attachShadow({ mode: "open" });
   const style = document.createElement("style");
@@ -43,7 +43,7 @@ export function getShadowHost(): ShadowHost {
   return cached;
 }
 
-// Small filled "?" badge, matching the fab/accent color — the actual mouse
+// Small filled "?" badge, matching the fab/accent color: the actual mouse
 // pointer becomes a question mark while inspecting, not a generic crosshair.
 // `help` is the fallback keyword if the custom cursor image fails to load.
 const CURSOR_SVG =
@@ -56,7 +56,7 @@ const CURSOR_SVG =
 // root's own stylesheet, for two different reasons:
 //  - the inspect-mode cursor has to apply to the host page itself, since a
 //    shadow root's styles never reach outside its own tree;
-//  - @property registrations are document-scoped — declaring one inside a
+//  - @property registrations are document-scoped: declaring one inside a
 //    shadow root's stylesheet silently fails to register it (confirmed: the
 //    conic-gradient animation in shadow.css computed to `none` until this
 //    moved here), even though consuming the registered property via var()

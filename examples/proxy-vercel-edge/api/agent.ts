@@ -17,13 +17,13 @@ export const config = { runtime: "edge" };
 const MAX_TOKENS = 400;
 
 const INSPECT_CHILDREN_DESCRIPTION =
-  "Look at the direct contents of the element being explained — useful for containers like " +
+  "Look at the direct contents of the element being explained: useful for containers like " +
   "forms, menus, dropdowns, or lists whose own text doesn't say what's inside them (e.g. a " +
   "form's fields). Returns a short, read-only summary of each direct child: what kind of " +
   "thing it is and its label or text. Never modifies the page. Only use this if the element's " +
   "own info wasn't enough to answer confidently.";
 
-// No `execute` — this proxy has no DOM access at all. The model's tool-call
+// No `execute`: this proxy has no DOM access at all. The model's tool-call
 // pauses the stream (verified: finishes cleanly with finishReason "tool-calls",
 // no hang/error) and we relay it to the client as a "tool-call" frame; the
 // client is the one with the DOM, so it runs the query and re-POSTs with the
@@ -51,7 +51,7 @@ export default async function handler(request: Request): Promise<Response> {
     }
   } else {
     console.warn(
-      "[clicksplain proxy] WIDGET_TOKEN is not set — this endpoint accepts unauthenticated " +
+      "[clicksplain proxy] WIDGET_TOKEN is not set: this endpoint accepts unauthenticated " +
         "requests from anyone who finds the URL. Fine for local testing; set WIDGET_TOKEN " +
         "before deploying to production. See README.md."
     );
@@ -126,7 +126,7 @@ function jsonError(message: string, status: number, allowedOrigin: string): Resp
 // protocol the clicksplain client expects, so the client never needs to know which
 // provider (or which AI SDK version) the proxy calls internally.
 //
-// Deliberately iterates result.stream, not result.textStream — per the AI SDK's own
+// Deliberately iterates result.stream, not result.textStream: per the AI SDK's own
 // docs, textStream excludes error parts entirely (a mid-stream provider error, e.g.
 // a bad model id or rate limit, ends it silently with zero chunks and no thrown
 // exception). result.stream carries error parts explicitly, which we translate into
@@ -135,9 +135,9 @@ function jsonError(message: string, status: number, allowedOrigin: string): Resp
 // resume with a follow-up request rather than treating this as a finished answer.
 //
 // Error messages sent to the client are always a fixed generic string, never the
-// raw provider/SDK error — that upstream text can include internal details (exact
+// raw provider/SDK error: that upstream text can include internal details (exact
 // model id, provider-side rate-limit/account text) that aren't meant for whoever is
-// calling this endpoint, which — since WIDGET_TOKEN is the only gate — may not
+// calling this endpoint, which (since WIDGET_TOKEN is the only gate) may not
 // always be the real widget. The real error is still logged server-side.
 function translateAiSdkStream(result: {
   stream: AsyncIterable<{

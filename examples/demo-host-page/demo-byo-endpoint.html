@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Harbor — clicksplain demo (byo-endpoint)</title>
+<title>Harbor: clicksplain demo (byo-endpoint)</title>
 <link rel="stylesheet" href="shared-demo.css" />
 </head>
 <body>
@@ -125,11 +125,11 @@
       connector: "byo-endpoint",
       endpoint: "http://localhost:8787",
       // Only needed if the Worker has WIDGET_TOKEN set (recommended for
-      // production, optional for local testing) — pass the matching value
+      // production, optional for local testing): pass the matching value
       // via ?token=... here, or hardcode it in a real app.
       token: new URLSearchParams(window.location.search).get("token") || undefined,
       // Keyed off the current path dynamically so this demo works correctly
-      // however it's served (project root, subpath, different port, etc.) —
+      // however it's served (project root, subpath, different port, etc.),
       // in a real app you'd hardcode your actual route(s) here instead.
       docsConfig: {
         [window.location.pathname]: {

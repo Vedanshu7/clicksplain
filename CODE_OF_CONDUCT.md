@@ -2,8 +2,8 @@
 
 ## Our pledge
 
-We want participation in this project — as a contributor, issue reporter, or
-discussion participant — to be a harassment-free experience for everyone,
+We want participation in this project (as a contributor, issue reporter, or
+discussion participant) to be a harassment-free experience for everyone,
 regardless of age, body size, visible or invisible disability, ethnicity,
 sex characteristics, gender identity and expression, level of experience,
 education, socio-economic status, nationality, personal appearance, race,

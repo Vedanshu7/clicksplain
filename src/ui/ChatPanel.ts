@@ -2,7 +2,7 @@ export type ChatSubmitHandler = (question: string) => void;
 
 /**
  * Follow-up text input + send button + rendered turn list, composed inside
- * PopoverRenderer's panel — same composition style as PickerController owning
+ * PopoverRenderer's panel, same composition style as PickerController owning
  * ElementHighlighter. Hidden until the initial explanation (docs/cache/LLM)
  * settles; reset() clears it back to that hidden state for a new pick.
  */
@@ -97,7 +97,7 @@ export class ChatPanel {
     this.setSubmitting(false);
   }
 
-  /** Hides the form and clears turns/input — called on close and on re-picking a new element. */
+  /** Hides the form and clears turns/input: called on close and on re-picking a new element. */
   reset(): void {
     this.onSubmit = null;
     this.activeAssistantTurn = null;

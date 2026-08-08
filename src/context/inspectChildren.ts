@@ -4,7 +4,7 @@ import { extractElementInfo } from "./ElementInfoExtractor";
 const MAX_CHILDREN = 20;
 
 /**
- * Read-only summary of a container element's direct children — used by the
+ * Read-only summary of a container element's direct children: used by the
  * inspect_children tool so the model can answer about things like a form's
  * fields without their info being in the container's own text. Deliberately
  * scoped to direct element children only (no page-wide queries, no arbitrary

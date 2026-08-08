@@ -10,7 +10,7 @@ export interface ThemeConfig {
   fontFamily?: string;
 }
 
-// Maps each config key to the public CSS custom property it controls — see
+// Maps each config key to the public CSS custom property it controls: see
 // the doc comment at the top of shadow.css for what each one styles.
 const THEME_PROPERTY_MAP: Record<keyof ThemeConfig, string> = {
   accent: "--clicksplain-accent",
@@ -28,7 +28,7 @@ const THEME_PROPERTY_MAP: Record<keyof ThemeConfig, string> = {
  * Sets (or clears) inline custom properties on the mount element for each
  * theme key. Inline style has the highest specificity, so a JS theme value
  * always wins over a host-page CSS override of the same property, which in
- * turn wins over the built-in default — the same layering you'd expect from
+ * turn wins over the built-in default, the same layering you'd expect from
  * any config-over-convention system. Always touches every key (not just the
  * ones provided) so a later init() with a different or absent theme fully
  * resets rather than merging with a stale previous theme.

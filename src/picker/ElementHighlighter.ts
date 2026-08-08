@@ -43,7 +43,7 @@ export class ElementHighlighter {
 
     const target = event.target as Element | null;
     // Events crossing a shadow root boundary retarget to `hostElement` when observed
-    // from the light DOM (true for open and closed roots alike) — this is how we
+    // from the light DOM (true for open and closed roots alike): this is how we
     // skip highlighting our own UI.
     if (!target || target === this.hostElement) {
       this.box.style.display = "none";
@@ -56,7 +56,7 @@ export class ElementHighlighter {
     this.box.style.width = `${rect.width}px`;
     this.box.style.height = `${rect.height}px`;
     // Not enough room above the element (e.g. pinned near the top of the
-    // viewport) — show the badge inside the box instead of floating above it.
+    // viewport), show the badge inside the box instead of floating above it.
     this.badge.classList.toggle("oa-highlight-badge-inside", rect.top < BADGE_SPACE_THRESHOLD);
   };
 }

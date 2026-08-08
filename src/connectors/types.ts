@@ -9,7 +9,7 @@ export interface ElementInfo {
   agentId: string | null;
 }
 
-/** One resolved round of the read-only DOM reasoning loop — see inspectChildren.ts. */
+/** One resolved round of the read-only DOM reasoning loop: see inspectChildren.ts. */
 export interface ToolExchangeEntry {
   toolCallId: string;
   toolName: "inspect_children";
@@ -50,9 +50,9 @@ export type ExplainChunk =
 export interface AgentConnector {
   /**
    * `element` is the live picked DOM element, used only for local read-only tool
-   * execution (see inspect_children) — never serialized into a wire request.
+   * execution (see inspect_children); never serialized into a wire request.
    */
   explain(element: Element, req: ExplainRequest, signal: AbortSignal): AsyncIterable<string>;
-  /** Always a live call — chat turns are never cached or docsConfig-short-circuited. */
+  /** Always a live call: chat turns are never cached or docsConfig-short-circuited. */
   chat(element: Element, req: ChatRequest, signal: AbortSignal): AsyncIterable<string>;
 }

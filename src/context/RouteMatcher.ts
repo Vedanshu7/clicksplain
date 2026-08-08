@@ -1,7 +1,7 @@
 /**
  * Normalizes the current page's route for use as part of the tier-2 composite
  * lookup key. Prefers hash-based routing (`#/settings/team`) when present and
- * path-shaped, falling back to `pathname` — covers the common SPA and
+ * path-shaped, falling back to `pathname`: covers the common SPA and
  * multi-page-site cases with zero configuration.
  *
  * Path-parameter matching (e.g. `/users/:id`) is a v2 refinement; v1 matches

@@ -6,9 +6,9 @@ export interface ByoEndpointConnectorConfig {
   endpoint: string;
   /**
    * Shared secret matching the proxy's WIDGET_TOKEN, sent as x-widget-token.
-   * Defense-in-depth, not a cryptographic guarantee — it's visible in the
+   * Defense-in-depth, not a cryptographic guarantee: it's visible in the
    * client bundle/network to a sufficiently determined attacker, same as any
-   * client-embedded credential — but it stops the realistic threat here
+   * client-embedded credential, but it stops the realistic threat here
    * (scripts crawling for open, unauthenticated proxy endpoints). Optional:
    * unset matches the proxy's own default open/advisory-warning behavior.
    */
@@ -21,7 +21,7 @@ interface PendingToolCall {
   input: unknown;
 }
 
-// At most one inspect_children round-trip per explain/chat call — matches the
+// At most one inspect_children round-trip per explain/chat call: matches the
 // proxy's own MAX_TOOL_ROUNDS bound (see examples/proxy-*/src/index.ts), so a
 // click can never turn into an unbounded loop of requests.
 const MAX_TOOL_ROUNDS = 1;
@@ -29,12 +29,12 @@ const MAX_TOOL_ROUNDS = 1;
 /**
  * Streams from an adopter-owned proxy (e.g. the reference Cloudflare Worker or
  * Vercel Edge templates in examples/) implementing the canonical delta/done/error
- * SSE protocol. This is the recommended production path — the real LLM key never
+ * SSE protocol. This is the recommended production path: the real LLM key never
  * reaches the browser.
  *
  * The proxy has no DOM access, so when the model wants to inspect a container's
  * children it pauses (a "tool-call" frame instead of "done") and this connector
- * — which does have the DOM — executes the read-only query itself and resumes
+ * (which does have the DOM) executes the read-only query itself and resumes
  * the conversation with a follow-up request carrying the result.
  */
 export class ByoEndpointConnector implements AgentConnector {
@@ -56,10 +56,10 @@ export class ByoEndpointConnector implements AgentConnector {
     const toolExchange: ToolExchangeEntry[] = [];
 
     for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
-      // Round > 0 means the previous round paused on a tool-call — its answer
+      // Round > 0 means the previous round paused on a tool-call: its answer
       // resumes in a brand new HTTP response here. Prompting the model to leave
       // a blank line after its "let me check..." preamble proved unreliable
-      // (verified against the live API — it runs them together with no
+      // (verified against the live API, it runs them together with no
       // separator), so we inject the break here instead, at the one point we
       // can detect precisely: the first chunk of a resumed round.
       const inner = this.postAndStream(buildBody(toolExchange), signal);
@@ -82,12 +82,12 @@ export class ByoEndpointConnector implements AgentConnector {
 
       if (!toolCall) return; // finished normally, no tool needed (or none left)
 
-      // Defensive backstop — the proxy forces a text-only finish once toolExchange
+      // Defensive backstop: the proxy forces a text-only finish once toolExchange
       // already has MAX_TOOL_ROUNDS entries, so this should be unreachable in
       // practice, but degrade gracefully rather than looping if it ever happens.
       if (round === MAX_TOOL_ROUNDS) {
         throw new Error(
-          "I wasn't able to figure this out with confidence — feel free to ask a follow-up question!"
+          "I wasn't able to figure this out with confidence. Feel free to ask a follow-up question!"
         );
       }
 

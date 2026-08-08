@@ -22,10 +22,10 @@ export interface InitConfig {
   endpoint?: string;
   /** byo-endpoint: shared secret matching the proxy's WIDGET_TOKEN, if configured. */
   token?: string;
-  /** byok: raw LLM API key. Exposed in the browser — see ByokConnector's warning. */
+  /** byok: raw LLM API key. Exposed in the browser: see ByokConnector's warning. */
   apiKey?: string;
   model?: string;
-  /** Independently configurable from `model` — falls back to it if unset. */
+  /** Independently configurable from `model`: falls back to it if unset. */
   chatModel?: string;
   /** byok only. */
   provider?: "anthropic" | "openai";
@@ -35,10 +35,10 @@ export interface InitConfig {
   docsConfig?: DocsConfig;
   cache?: CacheConfig;
   /**
-   * Programmatic theme overrides — sets the same public CSS custom properties
+   * Programmatic theme overrides: sets the same public CSS custom properties
    * a host page could set itself (see shadow.css's doc comment), just as an
    * inline style so it always wins over host-page CSS. Not available via the
-   * plain <script data-*> auto-init path — use host-page CSS custom properties
+   * plain <script data-*> auto-init path: use host-page CSS custom properties
    * there instead (zero JS needed either way).
    */
   theme?: ThemeConfig;
@@ -132,7 +132,7 @@ class ClicksplainInstance {
     if (!this.currentPick) return;
     const { element, elementInfo, route, docsContext, baseExplanation } = this.currentPick;
 
-    // Snapshot turns prior to this question — chatSession.addUserTurn below
+    // Snapshot turns prior to this question: chatSession.addUserTurn below
     // records it for the *next* turn's history, not this request's.
     const history = [...this.chatSession.history];
     const signal = this.session.beginChatTurn();
@@ -218,7 +218,7 @@ function readConfigFromScriptTag(): InitConfig | null {
 }
 
 // Auto-init when loaded as a plain <script data-connector="..."> tag. Errors are
-// caught (not thrown) here specifically — this runs unattended at module load,
+// caught (not thrown) here specifically: this runs unattended at module load,
 // with no calling code able to wrap it in try/catch, so a misconfigured widget
 // must not break the rest of the host page's scripts.
 if (typeof document !== "undefined") {

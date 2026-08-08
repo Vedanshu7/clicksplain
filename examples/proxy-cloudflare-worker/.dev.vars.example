@@ -1,15 +1,15 @@
 # Copy this file to .dev.vars (gitignored) and fill in your real key.
-# wrangler dev auto-loads .dev.vars — no separate export/source step needed.
+# wrangler dev auto-loads .dev.vars: no separate export/source step needed.
 #
 # API_KEY must match whichever PROVIDER is set in wrangler.toml (or override
-# PROVIDER/MODEL/CHAT_MODEL here too — .dev.vars values override wrangler.toml's
+# PROVIDER/MODEL/CHAT_MODEL here too: .dev.vars values override wrangler.toml's
 # [vars] for local dev).
 
 API_KEY=sk-ant-your-real-key-here
 
 # Shared secret the client must send as x-widget-token. Optional locally, but
 # set this (and pass the matching `token` to Clicksplain.init()) before
-# deploying to production — see README.md's security section for why
+# deploying to production: see README.md's security section for why
 # ALLOWED_ORIGIN/CORS alone does not restrict who can call this endpoint.
 # WIDGET_TOKEN=some-long-random-string
 

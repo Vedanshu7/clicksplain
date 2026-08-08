@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>clicksplain fixtures (isolation stress test — deliberately ugly)</title>
+<title>clicksplain fixtures (isolation stress test: deliberately ugly)</title>
 <style>
   /* Deliberately adversarial host-page styles: aggressive reset + class names
      that collide with clicksplain's own internal class names (.button, .popover),
      to prove the widget's Shadow DOM boundary actually holds. This page is meant
-     to look bad — see demo-byok.html / demo-byo-endpoint.html for what the widget
+     to look bad: see demo-byok.html / demo-byo-endpoint.html for what the widget
      looks like on an actual polished product page. */
   * { all: revert; box-sizing: content-box; }
   body { font-family: Georgia, serif; margin: 0; background: #111; color: #eee; }
@@ -36,7 +36,7 @@
   <div class="corner bl" role="button" tabindex="0">BL corner</div>
   <div class="corner br" role="button" tabindex="0">BR corner</div>
 
-  <div class="banner" id="hero-banner">Full-bleed banner — pick me too</div>
+  <div class="banner" id="hero-banner">Full-bleed banner, pick me too</div>
 
   <div class="stack-trap">
     <button class="button" data-agent-id="invite-teammates">Send Invite (z-index stack trap)</button>
@@ -55,7 +55,7 @@
   </form>
 
   <p class="note">
-    Isolation stress test — deliberately clashing colors, colliding class names
+    Isolation stress test: deliberately clashing colors, colliding class names
     (<code>.button</code>, <code>.popover</code>), z-index traps, and an aggressive
     <code>* { all: revert }</code> reset. If the "?" fab, cursor, highlight box, and
     popover all still render and work correctly here, the widget's Shadow DOM

@@ -63,7 +63,7 @@ export class PickerController {
     if (this.session.mode !== "inspecting") return;
 
     const target = event.target as Element | null;
-    // Retargeted to hostElement when the click landed on our own UI (fab/popover) —
+    // Retargeted to hostElement when the click landed on our own UI (fab/popover):
     // let it through untouched so the fab's own listener still handles it.
     if (!target || target === this.hostElement) return;
 

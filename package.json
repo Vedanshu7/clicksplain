@@ -1,7 +1,7 @@
 {
   "name": "clicksplain",
   "version": "1.0.0",
-  "description": "Drop-in AI widget that explains any UI element on click. Client-side only, pluggable LLM connectors.",
+  "description": "Drop-in AI widget that explains any UI element on click. Ships with LLM connectors and reference proxy templates; no hosted backend.",
   "license": "MIT",
   "author": "Vedanshu Joshi",
   "homepage": "https://github.com/Vedanshu7/clicksplain#readme",
