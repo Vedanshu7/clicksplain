@@ -92,7 +92,7 @@ export class ByoEndpointConnector implements AgentConnector {
       }
 
       if (toolCall.toolName !== "inspect_children") {
-        throw new Error(`docent: unsupported tool "${toolCall.toolName}"`);
+        throw new Error(`clicksplain: unsupported tool "${toolCall.toolName}"`);
       }
 
       const result = inspectChildren(element);
@@ -121,7 +121,7 @@ export class ByoEndpointConnector implements AgentConnector {
     });
 
     if (!response.ok || !response.body) {
-      throw new Error(`docent proxy error (${response.status})`);
+      throw new Error(`clicksplain proxy error (${response.status})`);
     }
 
     for await (const frame of parseSseStream(response.body)) {

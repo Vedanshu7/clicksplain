@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>docent fixtures (isolation stress test — deliberately ugly)</title>
+<title>clicksplain fixtures (isolation stress test — deliberately ugly)</title>
 <style>
   /* Deliberately adversarial host-page styles: aggressive reset + class names
-     that collide with docent's own internal class names (.button, .popover),
+     that collide with clicksplain's own internal class names (.button, .popover),
      to prove the widget's Shadow DOM boundary actually holds. This page is meant
      to look bad — see demo-byok.html / demo-byo-endpoint.html for what the widget
      looks like on an actual polished product page. */
@@ -63,9 +63,9 @@
     running locally on port 8787.
   </p>
 
-  <script src="../../dist/docent.global.js"></script>
+  <script src="../../dist/clicksplain.global.js"></script>
   <script>
-    Docent.init({
+    Clicksplain.init({
       connector: "byo-endpoint",
       endpoint: "http://localhost:8787",
       token: new URLSearchParams(window.location.search).get("token") || undefined,

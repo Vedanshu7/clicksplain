@@ -67,7 +67,7 @@ export default {
       }
     } else {
       console.warn(
-        "[docent proxy] WIDGET_TOKEN is not set — this endpoint accepts unauthenticated " +
+        "[clicksplain proxy] WIDGET_TOKEN is not set — this endpoint accepts unauthenticated " +
           "requests from anyone who finds the URL. Fine for local testing; set WIDGET_TOKEN " +
           "before deploying to production. See README.md."
       );
@@ -139,7 +139,7 @@ function jsonError(message: string, status: number, allowedOrigin: string): Resp
 }
 
 // Reshapes the AI SDK's stream into the canonical {"type":"delta"|"done"|"error"|"tool-call"}
-// protocol the docent client expects, so the client never needs to know which
+// protocol the clicksplain client expects, so the client never needs to know which
 // provider (or which AI SDK version) the proxy calls internally.
 //
 // Deliberately iterates result.stream, not result.textStream — per the AI SDK's own
@@ -187,14 +187,14 @@ function translateAiSdkStream(result: {
             );
             return; // `finally` below closes the controller exactly once.
           } else if (part.type === "error") {
-            console.error("[docent proxy] stream error:", part.error);
+            console.error("[clicksplain proxy] stream error:", part.error);
             controller.enqueue(encoder.encode(sseLine({ type: "error", message: GENERIC_ERROR })));
             return;
           }
         }
         controller.enqueue(encoder.encode(sseLine({ type: "done" })));
       } catch (err) {
-        console.error("[docent proxy] stream failed:", err);
+        console.error("[clicksplain proxy] stream failed:", err);
         controller.enqueue(encoder.encode(sseLine({ type: "error", message: GENERIC_ERROR })));
       } finally {
         controller.close();

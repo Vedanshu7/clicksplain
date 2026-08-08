@@ -13,15 +13,15 @@ export interface ThemeConfig {
 // Maps each config key to the public CSS custom property it controls — see
 // the doc comment at the top of shadow.css for what each one styles.
 const THEME_PROPERTY_MAP: Record<keyof ThemeConfig, string> = {
-  accent: "--docent-accent",
-  accentActive: "--docent-accent-active",
-  accentContrast: "--docent-accent-contrast",
-  surface: "--docent-surface",
-  border: "--docent-border",
-  text: "--docent-text",
-  danger: "--docent-danger",
-  radius: "--docent-radius",
-  fontFamily: "--docent-font-family",
+  accent: "--clicksplain-accent",
+  accentActive: "--clicksplain-accent-active",
+  accentContrast: "--clicksplain-accent-contrast",
+  surface: "--clicksplain-surface",
+  border: "--clicksplain-border",
+  text: "--clicksplain-text",
+  danger: "--clicksplain-danger",
+  radius: "--clicksplain-radius",
+  fontFamily: "--clicksplain-font-family",
 };
 
 /**

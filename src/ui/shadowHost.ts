@@ -1,7 +1,7 @@
 import shadowCss from "../style/shadow.css";
 
-const HOST_ID = "docent-host";
-const GLOBAL_STYLE_ID = "docent-global-style";
+const HOST_ID = "clicksplain-host";
+const GLOBAL_STYLE_ID = "clicksplain-global-style";
 
 export interface ShadowHost {
   hostElement: HTMLElement;

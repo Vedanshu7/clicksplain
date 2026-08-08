@@ -1,4 +1,4 @@
-# Contributing to Docent
+# Contributing to Clicksplain
 
 Thanks for wanting to help. This is a small, focused project — a client-side
 widget plus two reference proxy templates — so the process is deliberately
@@ -21,10 +21,10 @@ change that matches it will look like it belongs.
 ## Development setup
 
 ```bash
-git clone https://github.com/Vedanshu7/docent.git
-cd docent
+git clone https://github.com/Vedanshu7/clicksplain.git
+cd clicksplain
 npm install
-npm run build      # produces dist/docent.global.js, .mjs, .cjs
+npm run build      # produces dist/clicksplain.global.js, .mjs, .cjs
 npm run dev         # tsup --watch, rebuilds on save
 npm run typecheck   # must be clean before you open a PR
 ```

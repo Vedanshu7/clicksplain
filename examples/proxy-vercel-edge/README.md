@@ -1,4 +1,4 @@
-# docent reference proxy — Vercel Edge Function
+# clicksplain reference proxy — Vercel Edge Function
 
 Same canonical protocol and behavior as `examples/proxy-cloudflare-worker` (via
 the [Vercel AI SDK](https://ai-sdk.dev), supporting Anthropic or OpenAI), for
@@ -49,7 +49,7 @@ going live:
 the response. It does **not** stop `curl`, a script, or any non-browser client
 from calling this endpoint directly and getting billed. The endpoint URL also
 isn't a secret: it ships verbatim in your site's client-side bundle
-(`Docent.init({ endpoint: "..." })`), visible to anyone via view-source.
+(`Clicksplain.init({ endpoint: "..." })`), visible to anyone via view-source.
 Still set `ALLOWED_ORIGIN` to your real site's origin before deploying — it's
 a real (if partial) restriction — but don't treat it as the security boundary.
 
@@ -57,7 +57,7 @@ a real (if partial) restriction — but don't treat it as the security boundary.
 environment variable, then pass the same value on the client:
 
 ```js
-Docent.init({
+Clicksplain.init({
   connector: "byo-endpoint",
   endpoint: "https://your-project.vercel.app/api/agent",
   token: "the-same-value-you-set-above",
@@ -89,7 +89,7 @@ code execution.
 
 **Before you deploy — checklist:**
 - [ ] `ALLOWED_ORIGIN` set to your real origin, not `*`
-- [ ] `WIDGET_TOKEN` set, and the same value passed to `Docent.init()`
+- [ ] `WIDGET_TOKEN` set, and the same value passed to `Clicksplain.init()`
 - [ ] Rate limiting configured on the platform side (Vercel dashboard)
 
 ## Local development
@@ -102,7 +102,7 @@ vercel dev
 Point the client at the local URL vercel dev prints (typically `http://localhost:3000/api/agent`):
 
 ```js
-Docent.init({
+Clicksplain.init({
   connector: "byo-endpoint",
   endpoint: "http://localhost:3000/api/agent",
 });

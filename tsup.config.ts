@@ -4,9 +4,9 @@ import { defineConfig } from "tsup";
 const vercelOidcStub = fileURLToPath(new URL("src/stubs/vercel-oidc-stub.ts", import.meta.url));
 
 export default defineConfig({
-  entry: { "docent": "src/index.ts" },
+  entry: { "clicksplain": "src/index.ts" },
   format: ["iife", "esm", "cjs"],
-  globalName: "Docent",
+  globalName: "Clicksplain",
   outExtension({ format }) {
     if (format === "iife") return { js: ".global.js" };
     if (format === "esm") return { js: ".mjs" };

@@ -3,7 +3,7 @@ import type { ChatTurn } from "../connectors/types";
 /**
  * Holds one popover's chat turn history. Scoped to a single element/session —
  * reset when a different element is picked or the popover closes, never carried
- * across (see DocentInstance in index.ts for the two reset triggers).
+ * across (see ClicksplainInstance in index.ts for the two reset triggers).
  */
 export class ChatSession {
   private turns: ChatTurn[] = [];

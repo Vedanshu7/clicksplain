@@ -63,7 +63,7 @@ holds a real, billable LLM API key. When touching either proxy template:
 ## CSS (widget styles, `src/style/shadow.css`)
 
 - Every themeable value is a CSS custom property with an `--oa-*` internal
-  name backed by a `--docent-*` public one (see the file's own header
+  name backed by a `--clicksplain-*` public one (see the file's own header
   comment for the full theme API). Don't hardcode a color, radius, or font
   that should be themeable.
 - `@property` registrations must live in the light-DOM style tag

@@ -8,7 +8,7 @@
 API_KEY=sk-ant-your-real-key-here
 
 # Shared secret the client must send as x-widget-token. Optional locally, but
-# set this (and pass the matching `token` to Docent.init()) before
+# set this (and pass the matching `token` to Clicksplain.init()) before
 # deploying to production — see README.md's security section for why
 # ALLOWED_ORIGIN/CORS alone does not restrict who can call this endpoint.
 # WIDGET_TOKEN=some-long-random-string

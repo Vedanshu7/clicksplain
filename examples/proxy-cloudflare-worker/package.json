@@ -1,8 +1,8 @@
 {
-  "name": "docent-proxy-cloudflare-worker",
+  "name": "clicksplain-proxy-cloudflare-worker",
   "private": true,
   "version": "0.1.0",
-  "description": "Reference BYO-endpoint proxy for docent. Deploy this in your own Cloudflare account.",
+  "description": "Reference BYO-endpoint proxy for clicksplain. Deploy this in your own Cloudflare account.",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy"

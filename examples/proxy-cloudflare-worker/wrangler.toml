@@ -1,4 +1,4 @@
-name = "docent-proxy"
+name = "clicksplain-proxy"
 main = "src/index.ts"
 compatibility_date = "2026-01-01"
 

@@ -1,10 +1,10 @@
-# docent reference proxy — Cloudflare Worker
+# clicksplain reference proxy — Cloudflare Worker
 
-This is the recommended production backend for `docent`'s `byo-endpoint`
+This is the recommended production backend for `clicksplain`'s `byo-endpoint`
 connector. It holds your LLM API key server-side (via the [Vercel AI
 SDK](https://ai-sdk.dev), supporting Anthropic or OpenAI) and implements the
 canonical streaming protocol the client library expects. You deploy and own
-this — nothing here talks to any service run by docent itself.
+this — nothing here talks to any service run by clicksplain itself.
 
 ## Setup
 
@@ -53,7 +53,7 @@ going live:
 the response. It does **not** stop `curl`, a script, or any non-browser client
 from calling this endpoint directly and getting billed. The endpoint URL also
 isn't a secret: it ships verbatim in your site's client-side bundle
-(`Docent.init({ endpoint: "..." })`), visible to anyone via view-source.
+(`Clicksplain.init({ endpoint: "..." })`), visible to anyone via view-source.
 Still set `ALLOWED_ORIGIN` to your real site's origin before deploying — it's
 a real (if partial) restriction — but don't treat it as the security boundary.
 
@@ -66,7 +66,7 @@ wrangler secret put WIDGET_TOKEN
 Then pass the same value on the client:
 
 ```js
-Docent.init({
+Clicksplain.init({
   connector: "byo-endpoint",
   endpoint: "https://your-worker.workers.dev",
   token: "the-same-value-you-set-above",
@@ -100,7 +100,7 @@ code execution.
 
 **Before you deploy — checklist:**
 - [ ] `ALLOWED_ORIGIN` set to your real origin, not `*`
-- [ ] `WIDGET_TOKEN` set, and the same value passed to `Docent.init()`
+- [ ] `WIDGET_TOKEN` set, and the same value passed to `Clicksplain.init()`
 - [ ] Rate limiting configured on the platform side (Cloudflare dashboard)
 
 ## Local development
@@ -113,7 +113,7 @@ Runs on `http://localhost:8787` by default, using the key from `.dev.vars`.
 Point the client at it:
 
 ```js
-Docent.init({
+Clicksplain.init({
   connector: "byo-endpoint",
   endpoint: "http://localhost:8787",
 });

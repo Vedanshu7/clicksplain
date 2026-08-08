@@ -1,6 +1,6 @@
-# docent
+# clicksplain
 
-[![npm version](https://img.shields.io/npm/v/%40vedanshu7%2Fdocent.svg)](https://www.npmjs.com/package/@vedanshu7/docent)
+[![npm version](https://img.shields.io/npm/v/clicksplain.svg)](https://www.npmjs.com/package/clicksplain)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 A drop-in, AI-powered "explain this UI" widget. Click the "?" button, then click any element on the page to get an LLM-generated explanation of what it does — rendered in an animated popover anchored to the element.
@@ -13,7 +13,7 @@ A drop-in, AI-powered "explain this UI" widget. Click the "?" button, then click
 ## Quick start
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@vedanshu7/docent@latest/dist/docent.global.js"
+<script src="https://cdn.jsdelivr.net/npm/clicksplain@latest/dist/clicksplain.global.js"
         data-connector="byo-endpoint"
         data-endpoint="https://yoursite.com/api/agent"></script>
 ```
@@ -21,7 +21,7 @@ A drop-in, AI-powered "explain this UI" widget. Click the "?" button, then click
 Or via npm:
 
 ```bash
-npm install @vedanshu7/docent
+npm install clicksplain
 ```
 
 See `examples/demo-host-page/` for a working local demo of both connector modes.
@@ -34,32 +34,32 @@ through the widget's Shadow DOM boundary — so your site's own CSS can restyle
 it with zero JavaScript:
 
 ```css
-/* your site's own stylesheet — no docent-specific setup needed */
+/* your site's own stylesheet — no clicksplain-specific setup needed */
 :root {
-  --docent-accent: #16a34a;         /* fab, active states, links, send button */
-  --docent-accent-active: #15803d;  /* hover/active shade of the accent */
-  --docent-accent-contrast: #fff;   /* text/icon color drawn on top of the accent */
-  --docent-surface: #052e16;        /* popover/panel background */
-  --docent-border: rgba(34, 197, 94, 0.35); /* hairlines, dividers, subtle fills */
-  --docent-text: #dcfce7;           /* body text color */
-  --docent-danger: #dc2626;         /* error text */
-  --docent-radius: 4px;             /* popover corner radius — chat/highlight
+  --clicksplain-accent: #16a34a;         /* fab, active states, links, send button */
+  --clicksplain-accent-active: #15803d;  /* hover/active shade of the accent */
+  --clicksplain-accent-contrast: #fff;   /* text/icon color drawn on top of the accent */
+  --clicksplain-surface: #052e16;        /* popover/panel background */
+  --clicksplain-border: rgba(34, 197, 94, 0.35); /* hairlines, dividers, subtle fills */
+  --clicksplain-text: #dcfce7;           /* body text color */
+  --clicksplain-danger: #dc2626;         /* error text */
+  --clicksplain-radius: 4px;             /* popover corner radius — chat/highlight
                                         radii scale proportionally from this */
-  --docent-font-family: "Inter", sans-serif;
+  --clicksplain-font-family: "Inter", sans-serif;
 }
 ```
 
 Any property you don't set keeps its default (and its own light/dark-mode
 default, matched to `prefers-color-scheme`).
 
-If you're using `Docent.init()` rather than the plain `<script data-*>`
+If you're using `Clicksplain.init()` rather than the plain `<script data-*>`
 tag, you can also set the same properties programmatically — useful for
 per-tenant branding fetched at runtime. A JS `theme` value always wins over a
 host-page CSS override of the same property, which in turn wins over the
 built-in default:
 
 ```js
-Docent.init({
+Clicksplain.init({
   connector: "byo-endpoint",
   endpoint: "https://yoursite.com/api/agent",
   theme: {

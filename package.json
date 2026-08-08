@@ -1,16 +1,16 @@
 {
-  "name": "@vedanshu7/docent",
+  "name": "clicksplain",
   "version": "1.0.0",
-  "description": "Drop-in AI widget that explains any UI element on click, like a docent for your product. Client-side only, pluggable LLM connectors.",
+  "description": "Drop-in AI widget that explains any UI element on click. Client-side only, pluggable LLM connectors.",
   "license": "MIT",
   "author": "Vedanshu Joshi",
-  "homepage": "https://github.com/Vedanshu7/docent#readme",
+  "homepage": "https://github.com/Vedanshu7/clicksplain#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Vedanshu7/docent.git"
+    "url": "git+https://github.com/Vedanshu7/clicksplain.git"
   },
   "bugs": {
-    "url": "https://github.com/Vedanshu7/docent/issues"
+    "url": "https://github.com/Vedanshu7/clicksplain/issues"
   },
   "keywords": [
     "widget",
@@ -23,25 +23,22 @@
     "developer-tools"
   ],
   "type": "module",
-  "main": "./dist/docent.cjs",
-  "module": "./dist/docent.mjs",
-  "types": "./dist/docent.d.ts",
-  "unpkg": "./dist/docent.global.js",
-  "jsdelivr": "./dist/docent.global.js",
+  "main": "./dist/clicksplain.cjs",
+  "module": "./dist/clicksplain.mjs",
+  "types": "./dist/clicksplain.d.ts",
+  "unpkg": "./dist/clicksplain.global.js",
+  "jsdelivr": "./dist/clicksplain.global.js",
   "exports": {
     ".": {
-      "types": "./dist/docent.d.ts",
-      "import": "./dist/docent.mjs",
-      "require": "./dist/docent.cjs"
+      "types": "./dist/clicksplain.d.ts",
+      "import": "./dist/clicksplain.mjs",
+      "require": "./dist/clicksplain.cjs"
     }
   },
   "files": [
     "dist",
     "README.md"
   ],
-  "publishConfig": {
-    "access": "public"
-  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",

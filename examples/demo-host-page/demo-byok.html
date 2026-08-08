@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Harbor — docent demo (BYOK)</title>
+<title>Harbor — clicksplain demo (BYOK)</title>
 <link rel="stylesheet" href="shared-demo.css" />
 </head>
 <body>
@@ -15,7 +15,7 @@
         <a class="rail-link" href="#">Integrations</a>
         <a class="rail-link" href="#">Billing</a>
       </nav>
-      <div class="rail-footer">Harbor v2.4 · docent demo</div>
+      <div class="rail-footer">Harbor v2.4 · clicksplain demo</div>
     </aside>
 
     <div class="main">
@@ -117,10 +117,10 @@
     read-only DOM reasoning tool, since a form's own text never says what's inside it).
   </p>
 
-  <script src="../../dist/docent.global.js"></script>
+  <script src="../../dist/clicksplain.global.js"></script>
   <script>
     const apiKey = new URLSearchParams(window.location.search).get("key") || "";
-    Docent.init({
+    Clicksplain.init({
       connector: "byok",
       apiKey,
       // Keyed off the current path dynamically so this demo works correctly

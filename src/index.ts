@@ -52,7 +52,7 @@ interface CurrentPick {
   baseExplanation: string;
 }
 
-class DocentInstance {
+class ClicksplainInstance {
   private readonly session: SessionState;
   private readonly chatSession: ChatSession;
   private readonly picker: PickerController;
@@ -160,7 +160,7 @@ class DocentInstance {
 
 function createConnector(config: InitConfig): AgentConnector {
   if (config.connector === "byok") {
-    if (!config.apiKey) throw new Error('[docent] "byok" connector requires apiKey');
+    if (!config.apiKey) throw new Error('[clicksplain] "byok" connector requires apiKey');
     const byokConfig: ByokConnectorConfig = {
       apiKey: config.apiKey,
       provider: config.provider,
@@ -173,20 +173,20 @@ function createConnector(config: InitConfig): AgentConnector {
 
   if (config.connector === "byo-endpoint") {
     if (!config.endpoint) {
-      throw new Error('[docent] "byo-endpoint" connector requires endpoint');
+      throw new Error('[clicksplain] "byo-endpoint" connector requires endpoint');
     }
     const endpointConfig: ByoEndpointConnectorConfig = { endpoint: config.endpoint, token: config.token };
     return new ByoEndpointConnector(endpointConfig);
   }
 
-  throw new Error(`[docent] unknown connector "${config.connector}"`);
+  throw new Error(`[clicksplain] unknown connector "${config.connector}"`);
 }
 
-let activeInstance: DocentInstance | null = null;
+let activeInstance: ClicksplainInstance | null = null;
 
 export function init(config: InitConfig): void {
   activeInstance?.destroy();
-  activeInstance = new DocentInstance(config);
+  activeInstance = new ClicksplainInstance(config);
 }
 
 export function destroy(): void {
@@ -203,7 +203,7 @@ function readConfigFromScriptTag(): InitConfig | null {
 
   const provider = script.dataset.provider;
   if (provider !== undefined && provider !== "anthropic" && provider !== "openai") {
-    throw new Error(`[docent] invalid data-provider "${provider}"`);
+    throw new Error(`[clicksplain] invalid data-provider "${provider}"`);
   }
 
   return {
@@ -227,7 +227,7 @@ if (typeof document !== "undefined") {
     try {
       init(autoConfig);
     } catch (err) {
-      console.error("[docent] failed to initialize:", err);
+      console.error("[clicksplain] failed to initialize:", err);
     }
   }
 }
