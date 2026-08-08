@@ -1,8 +1,27 @@
 {
-  "name": "docent",
-  "version": "0.1.0",
+  "name": "@vedanshu7/docent",
+  "version": "1.0.0",
   "description": "Drop-in AI widget that explains any UI element on click, like a docent for your product. Client-side only, pluggable LLM connectors.",
   "license": "MIT",
+  "author": "Vedanshu Joshi",
+  "homepage": "https://github.com/Vedanshu7/docent#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Vedanshu7/docent.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Vedanshu7/docent/issues"
+  },
+  "keywords": [
+    "widget",
+    "onboarding",
+    "ui-explainer",
+    "llm",
+    "ai",
+    "tooltip",
+    "shadow-dom",
+    "developer-tools"
+  ],
   "type": "module",
   "main": "./dist/docent.cjs",
   "module": "./dist/docent.mjs",
@@ -20,6 +39,9 @@
     "dist",
     "README.md"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",

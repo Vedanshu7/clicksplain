@@ -1,5 +1,8 @@
 # docent
 
+[![npm version](https://img.shields.io/npm/v/%40vedanshu7%2Fdocent.svg)](https://www.npmjs.com/package/@vedanshu7/docent)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
 A drop-in, AI-powered "explain this UI" widget. Click the "?" button, then click any element on the page to get an LLM-generated explanation of what it does — rendered in an animated popover anchored to the element.
 
 100% client-side library, no backend we run. Ships two ways to connect an LLM:
@@ -10,9 +13,15 @@ A drop-in, AI-powered "explain this UI" widget. Click the "?" button, then click
 ## Quick start
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/docent@latest/dist/docent.global.js"
+<script src="https://cdn.jsdelivr.net/npm/@vedanshu7/docent@latest/dist/docent.global.js"
         data-connector="byo-endpoint"
         data-endpoint="https://yoursite.com/api/agent"></script>
+```
+
+Or via npm:
+
+```bash
+npm install @vedanshu7/docent
 ```
 
 See `examples/demo-host-page/` for a working local demo of both connector modes.
@@ -67,3 +76,13 @@ host-page CSS custom properties there instead, which need no JS either way.
 
 Core widget, chat follow-ups, multi-provider gateway, and the read-only DOM
 reasoning loop are built and verified against both connector modes.
+
+## Contributing
+
+Bug reports, feature discussion, and PRs are welcome — see
+[CONTRIBUTING.md](./CONTRIBUTING.md) for the dev setup and process, and
+[CODE_STYLE.md](./CODE_STYLE.md) for how the code here is written.
+
+## License
+
+[MIT](./LICENSE)
