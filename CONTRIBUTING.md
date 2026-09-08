@@ -1,8 +1,8 @@
 # Contributing to Clicksplain
 
 Thanks for wanting to help. This is a small, focused project (a client-side
-widget plus two reference proxy templates), so the process is deliberately
-lightweight.
+widget, a runtime-agnostic server handler, and a reference proxy example), so
+the process is deliberately lightweight.
 
 Before writing code, read [CODE_STYLE.md](./CODE_STYLE.md). It describes how
 the existing code is actually written, not an aspirational standard, so a
@@ -24,21 +24,25 @@ change that matches it will look like it belongs.
 git clone https://github.com/Vedanshu7/clicksplain.git
 cd clicksplain
 npm install
-npm run build      # produces dist/clicksplain.global.js, .mjs, .cjs
+npm run build      # produces dist/clicksplain.{global.js,mjs,cjs} and dist/server*.{mjs,cjs}
 npm run dev         # tsup --watch, rebuilds on save
 npm run typecheck   # must be clean before you open a PR
 ```
 
-The two reference proxies each have their own `package.json` and are
-developed independently:
+The reference proxy example has its own `package.json` and is developed
+independently:
 
 ```bash
-cd examples/proxy-cloudflare-worker && npm install && npm run dev   # wrangler dev, port 8787
-cd examples/proxy-vercel-edge && npm install && npx vercel dev      # port 3000
+cd examples/proxy-node-http && npm install && npm run dev   # tsx --watch, port 8788
 ```
 
-Each has a `.dev.vars.example` / `.env.local.example`: copy it, fill in a
-real API key, and don't commit the copy (already gitignored).
+It has an `.env.local.example`: copy it, fill in a real API key, and don't
+commit the copy (already gitignored).
+
+It depends on the root package via `"clicksplain": "file:../.."`. Run
+`npm run build` at the repo root first (and again after any change to
+`src/shared/`, `src/server/`, or `src/connectors/`), since `file:` dependencies
+don't rebuild automatically.
 
 ## Testing your change
 
@@ -54,7 +58,8 @@ Changes are verified manually:
    stress-test Shadow DOM isolation against hostile host-page CSS
    (colliding class names, `z-index` traps, `* { all: revert }`). If you
    touch positioning, Shadow DOM boundaries, or theming, check this page.
-4. If your change touches a proxy, hit it directly with `curl` for the
+4. If your change touches `src/shared/`, `src/server/`, or
+   `examples/proxy-node-http`, hit the example directly with `curl` for the
    error paths (missing fields, oversized payloads, wrong/missing token);
    don't only test the happy path through the widget.
 
@@ -64,9 +69,9 @@ Changes are verified manually:
   riding along with it.
 - Write the PR description around *why*, not a restatement of the diff.
 - `npm run typecheck` and `npm run build` must both pass.
-- If you touched one reference proxy's behavior (validation, auth, error
-  shape), check whether the other one needs the same fix: they implement
-  the same wire protocol and are expected to stay in sync.
+- Wire-protocol behavior (validation, auth, error shape) lives in
+  `src/shared/` and `src/server/createHandler.ts`, not in
+  `examples/proxy-node-http`: fix it there, not in the example.
 - Commit messages: short, single-line, imperative ("Fix popover clipping on
   narrow viewports", not "Fixed a bug where...").
 

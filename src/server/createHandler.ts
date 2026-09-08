@@ -1,58 +1,64 @@
 import { streamText, tool } from "ai";
-import { z } from "zod";
-import { createModel, type Provider } from "./gateway";
 import {
   buildChatMessages,
   buildChatSystemPrompt,
   buildExplainMessages,
   buildSystemPrompt,
-  MAX_TOOL_ROUNDS,
-  parseRequestBody,
-  type ChatRequestBody,
-  type ExplainRequestBody,
-} from "./promptBuilder";
+} from "../shared/promptBuilder";
+import { MAX_TOOL_ROUNDS, parseRequestBody, type ChatRequestBody, type ExplainRequestBody } from "../shared/protocol";
+import { createModel, MAX_TOKENS, type Provider } from "../shared/gateway";
+import { INSPECT_CHILDREN_DESCRIPTION, inspectChildrenInputSchema } from "../shared/tools";
 
-export interface Env {
-  /** Key for whichever provider PROVIDER selects: only one provider is ever active at a time. */
-  API_KEY: string;
-  ALLOWED_ORIGIN?: string;
-  PROVIDER?: Provider;
-  MODEL?: string;
-  CHAT_MODEL?: string;
+export interface ClicksplainHandlerConfig {
+  /** Key for whichever provider `provider` selects: only one provider is ever active at a time. */
+  apiKey: string;
+  provider?: Provider;
+  model?: string;
+  /** Independently configurable from `model`: falls back to it if unset. */
+  chatModel?: string;
   /**
    * Shared secret the client must send as x-widget-token. Optional: unset means
    * this endpoint accepts unauthenticated requests from anyone who finds the URL
-   * (fine for local testing, not for production; see README's security section).
-   * Note ALLOWED_ORIGIN/CORS does NOT provide this protection: CORS only restricts
-   * which origins a *browser* will let JS read the response from, it does nothing
-   * to stop curl/scripts from calling this endpoint directly.
+   * (fine for local testing, not for production). Note allowedOrigin/CORS does
+   * NOT provide this protection: CORS only restricts which origins a *browser*
+   * will let JS read the response from, it does nothing to stop curl/scripts
+   * from calling this endpoint directly.
    */
-  WIDGET_TOKEN?: string;
+  widgetToken?: string;
+  allowedOrigin?: string;
+  /** portkey only: base URL of the adopter's self-hosted Portkey AI Gateway. */
+  portkeyGatewayUrl?: string;
+  /** portkey only: which underlying provider Portkey should route this request to. */
+  portkeyProvider?: string;
 }
 
-const MAX_TOKENS = 400;
-
-const INSPECT_CHILDREN_DESCRIPTION =
-  "Look at the direct contents of the element being explained: useful for containers like " +
-  "forms, menus, dropdowns, or lists whose own text doesn't say what's inside them (e.g. a " +
-  "form's fields). Returns a short, read-only summary of each direct child: what kind of " +
-  "thing it is and its label or text. Never modifies the page. Only use this if the element's " +
-  "own info wasn't enough to answer confidently.";
-
-// No `execute`: this proxy has no DOM access at all. The model's tool-call
+// No `execute`: a server handler has no DOM access at all. The model's tool-call
 // pauses the stream (verified: finishes cleanly with finishReason "tool-calls",
 // no hang/error) and we relay it to the client as a "tool-call" frame; the
 // client is the one with the DOM, so it runs the query and re-POSTs with the
 // result in `toolExchange` to resume the conversation.
 const inspectChildrenTool = tool({
   description: INSPECT_CHILDREN_DESCRIPTION,
-  inputSchema: z.object({}),
+  inputSchema: inspectChildrenInputSchema,
 });
 
-export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    const allowedOrigin = env.ALLOWED_ORIGIN ?? "*";
+/**
+ * Runtime-agnostic core of a clicksplain "byo-endpoint" server: takes a standard
+ * Web Request, returns a standard Web Response. Works unmodified on any runtime
+ * that speaks the Fetch API natively (Cloudflare Workers, Vercel Edge Functions,
+ * Next.js Route Handlers, Deno, Bun, Hono, ...): mount it directly as the
+ * platform's handler. For classic Node-callback servers (Express, plain
+ * node:http), wrap it with `toNodeHandler` from "clicksplain/server/node".
+ *
+ * Deliberately takes a fully-resolved config object rather than reading
+ * `process.env` (or any other platform global) itself: some runtimes (e.g.
+ * Cloudflare Workers) have no `process.env` at all, so env access is always the
+ * caller's responsibility, keeping this function itself 100% portable.
+ */
+export function createClicksplainHandler(config: ClicksplainHandlerConfig): (request: Request) => Promise<Response> {
+  const allowedOrigin = config.allowedOrigin ?? "*";
 
+  return async (request: Request): Promise<Response> => {
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: corsHeaders(allowedOrigin) });
     }
@@ -61,15 +67,15 @@ export default {
       return jsonError("Method not allowed", 405, allowedOrigin);
     }
 
-    if (env.WIDGET_TOKEN) {
-      if (request.headers.get("x-widget-token") !== env.WIDGET_TOKEN) {
+    if (config.widgetToken) {
+      if (request.headers.get("x-widget-token") !== config.widgetToken) {
         return jsonError("Unauthorized", 401, allowedOrigin);
       }
     } else {
       console.warn(
-        "[clicksplain proxy] WIDGET_TOKEN is not set: this endpoint accepts unauthenticated " +
-          "requests from anyone who finds the URL. Fine for local testing; set WIDGET_TOKEN " +
-          "before deploying to production. See README.md."
+        "[clicksplain] widgetToken is not set: this endpoint accepts unauthenticated " +
+          "requests from anyone who finds the URL. Fine for local testing; set widgetToken " +
+          "before deploying to production."
       );
     }
 
@@ -86,20 +92,25 @@ export default {
     }
     const body = parsed.body;
 
-    const provider: Provider = env.PROVIDER ?? "anthropic";
-    if (!env.API_KEY) {
-      return jsonError("Server misconfigured: API_KEY not set", 500, allowedOrigin);
+    const provider: Provider = config.provider ?? "anthropic";
+    if (!config.apiKey) {
+      return jsonError("Server misconfigured: apiKey not set", 500, allowedOrigin);
     }
 
     const isChat = body.mode === "chat";
     const systemPrompt = isChat ? buildChatSystemPrompt() : buildSystemPrompt();
-    const messages = isChat ? buildChatMessages(body as ChatRequestBody) : buildExplainMessages(body as ExplainRequestBody);
-    const modelId = isChat ? env.CHAT_MODEL ?? env.MODEL : env.MODEL;
+    const messages = isChat
+      ? buildChatMessages(body as ChatRequestBody)
+      : buildExplainMessages(body as ExplainRequestBody);
+    const modelId = isChat ? (config.chatModel ?? config.model) : config.model;
     const roundsUsed = body.toolExchange?.length ?? 0;
 
     let model;
     try {
-      model = createModel(provider, modelId, env.API_KEY);
+      model = createModel(provider, modelId, config.apiKey, {
+        portkeyGatewayUrl: config.portkeyGatewayUrl,
+        portkeyProvider: config.portkeyProvider,
+      });
     } catch (err) {
       return jsonError(err instanceof Error ? err.message : "model configuration error", 500, allowedOrigin);
     }
@@ -120,8 +131,8 @@ export default {
         ...corsHeaders(allowedOrigin),
       },
     });
-  },
-};
+  };
+}
 
 function corsHeaders(allowedOrigin: string): HeadersInit {
   return {
@@ -140,7 +151,7 @@ function jsonError(message: string, status: number, allowedOrigin: string): Resp
 
 // Reshapes the AI SDK's stream into the canonical {"type":"delta"|"done"|"error"|"tool-call"}
 // protocol the clicksplain client expects, so the client never needs to know which
-// provider (or which AI SDK version) the proxy calls internally.
+// provider (or which AI SDK version) the server calls internally.
 //
 // Deliberately iterates result.stream, not result.textStream: per the AI SDK's own
 // docs, textStream excludes error parts entirely (a mid-stream provider error, e.g.
@@ -153,7 +164,7 @@ function jsonError(message: string, status: number, allowedOrigin: string): Resp
 // Error messages sent to the client are always a fixed generic string, never the
 // raw provider/SDK error: that upstream text can include internal details (exact
 // model id, provider-side rate-limit/account text) that aren't meant for whoever is
-// calling this endpoint, which (since WIDGET_TOKEN is the only gate) may not
+// calling this endpoint, which (since widgetToken is the only gate) may not
 // always be the real widget. The real error is still logged server-side.
 function translateAiSdkStream(result: {
   stream: AsyncIterable<{
@@ -187,14 +198,14 @@ function translateAiSdkStream(result: {
             );
             return; // `finally` below closes the controller exactly once.
           } else if (part.type === "error") {
-            console.error("[clicksplain proxy] stream error:", part.error);
+            console.error("[clicksplain] stream error:", part.error);
             controller.enqueue(encoder.encode(sseLine({ type: "error", message: GENERIC_ERROR })));
             return;
           }
         }
         controller.enqueue(encoder.encode(sseLine({ type: "done" })));
       } catch (err) {
-        console.error("[clicksplain proxy] stream failed:", err);
+        console.error("[clicksplain] stream failed:", err);
         controller.enqueue(encoder.encode(sseLine({ type: "error", message: GENERIC_ERROR })));
       } finally {
         controller.close();

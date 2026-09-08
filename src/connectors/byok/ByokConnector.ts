@@ -1,7 +1,8 @@
 import { stepCountIs, streamText } from "ai";
 import type { AgentConnector, ChatRequest, ExplainRequest } from "../types";
-import { createModel, type Provider } from "./gateway";
-import { buildChatMessages, buildChatSystemPrompt, buildSystemPrompt, buildUserMessage } from "./promptBuilder";
+import { createModel, MAX_TOKENS, type Provider } from "./gateway";
+import { buildChatMessages, buildChatSystemPrompt, buildExplainMessages, buildSystemPrompt } from "../../shared/promptBuilder";
+import { MAX_TOOL_ROUNDS } from "../../shared/protocol";
 import { createInspectChildrenTool } from "./tools";
 
 export interface ByokConnectorConfig {
@@ -17,12 +18,11 @@ export interface ByokConnectorConfig {
   strictOrigins?: string[];
 }
 
-const MAX_TOKENS = 400;
 // 1 initial step + 1 tool-augmented follow-up: bounds cost/latency to at most
-// one inspect_children round-trip per explain/chat call. Matches the byo-endpoint
-// relay loop's own bound (see ByoEndpointConnector.ts) for consistent behavior
-// regardless of which connector is configured.
-const MAX_TOOL_STEPS = 2;
+// one inspect_children round-trip per explain/chat call. Derived from the same
+// MAX_TOOL_ROUNDS the byo-endpoint relay loop enforces (see ByoEndpointConnector.ts)
+// for consistent behavior regardless of which connector is configured.
+const MAX_TOOL_STEPS = MAX_TOOL_ROUNDS + 1;
 const DEV_HOSTNAME_PATTERNS = [/^localhost$/, /^127\.0\.0\.1$/, /\.local$/];
 
 /**
@@ -79,7 +79,7 @@ export class ByokConnector implements AgentConnector {
     const result = streamText({
       model: this.model,
       system: buildSystemPrompt(),
-      messages: [{ role: "user", content: buildUserMessage(req) }],
+      messages: buildExplainMessages(req),
       tools: { inspect_children: createInspectChildrenTool(element) },
       stopWhen: stepCountIs(MAX_TOOL_STEPS),
       abortSignal: signal,

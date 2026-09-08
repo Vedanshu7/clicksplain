@@ -1,4 +1,29 @@
-import type { ChatRequest, ElementInfo, ExplainRequest } from "../types";
+import type { ElementInfo } from "./protocol";
+
+// Structural, not the wire-protocol types from ./protocol.ts directly: both the
+// client's ExplainRequest/ChatRequest (connectors/types.ts) and the server's
+// ExplainRequestBody/ChatRequestBody (./protocol.ts) satisfy these without a cast.
+// The two differ in exactly the fields these functions never touch (server's
+// `mode` discriminator; the client's more precisely-typed ToolExchangeEntry).
+interface ToolExchangeEntryLike {
+  toolCallId: string;
+  toolName: string;
+  input: unknown;
+  result: unknown;
+}
+
+interface ExplainLike {
+  elementInfo: ElementInfo;
+  docsContext: string | null;
+  route: string;
+  toolExchange?: ToolExchangeEntryLike[];
+}
+
+interface ChatLike extends ExplainLike {
+  baseExplanation: string;
+  history: { role: "user" | "assistant"; text: string }[];
+  question: string;
+}
 
 export function buildSystemPrompt(): string {
   return [
@@ -53,20 +78,54 @@ function elementContextLines(elementInfo: ElementInfo, docsContext: string | nul
   return lines;
 }
 
-export function buildUserMessage(req: ExplainRequest): string {
+export function buildUserMessage(req: ExplainLike): string {
   return elementContextLines(req.elementInfo, req.docsContext, req.route).join("\n");
 }
 
 /** The framing content fused into the first real user turn: element context + what was already shown. */
-function buildChatContextMessage(req: ChatRequest): string {
+function buildChatContextMessage(req: ChatLike): string {
   const lines = elementContextLines(req.elementInfo, req.docsContext, req.route);
   lines.push(`Explanation already shown: ${req.baseExplanation}`);
   return lines.join("\n");
 }
 
-export interface ChatMessage {
-  role: "user" | "assistant";
-  content: string;
+/**
+ * Reconstructs the assistant tool-call + tool tool-result message pair for each
+ * already-resolved round of the DOM reasoning loop, so the model sees a normal
+ * conversation history when the call is resumed after the client executed
+ * inspect_children, even though that execution happened in a *separate* HTTP
+ * request than the one that's resuming it (a byo-endpoint server is stateless
+ * per-request; BYOK never populates toolExchange at all, since the AI SDK's own
+ * multi-step loop handles tool calls in-memory within one streamText call, so
+ * this is always a no-op there).
+ */
+function toolExchangeMessages(toolExchange: ToolExchangeEntryLike[]) {
+  return toolExchange.flatMap((entry) => [
+    {
+      role: "assistant" as const,
+      content: [
+        { type: "tool-call" as const, toolCallId: entry.toolCallId, toolName: entry.toolName, input: entry.input },
+      ],
+    },
+    {
+      role: "tool" as const,
+      content: [
+        {
+          type: "tool-result" as const,
+          toolCallId: entry.toolCallId,
+          toolName: entry.toolName,
+          output: { type: "text" as const, value: JSON.stringify(entry.result) },
+        },
+      ],
+    },
+  ]);
+}
+
+export function buildExplainMessages(req: ExplainLike) {
+  return [
+    { role: "user" as const, content: buildUserMessage(req) },
+    ...toolExchangeMessages(req.toolExchange ?? []),
+  ];
 }
 
 /**
@@ -81,17 +140,21 @@ export interface ChatMessage {
  * question" and responds as if no question was asked at all; reproduced
  * directly against the live API during v2 verification.
  */
-export function buildChatMessages(req: ChatRequest): ChatMessage[] {
+export function buildChatMessages(req: ChatLike) {
   const context = buildChatContextMessage(req);
 
   if (req.history.length === 0) {
-    return [{ role: "user", content: `${context}\n\nQuestion: ${req.question}` }];
+    return [
+      { role: "user" as const, content: `${context}\n\nQuestion: ${req.question}` },
+      ...toolExchangeMessages(req.toolExchange ?? []),
+    ];
   }
 
   const [firstTurn, ...restTurns] = req.history;
   return [
-    { role: "user", content: `${context}\n\nQuestion: ${firstTurn!.text}` },
+    { role: "user" as const, content: `${context}\n\nQuestion: ${firstTurn!.text}` },
     ...restTurns.map((turn) => ({ role: turn.role, content: turn.text })),
-    { role: "user", content: req.question },
+    { role: "user" as const, content: req.question },
+    ...toolExchangeMessages(req.toolExchange ?? []),
   ];
 }

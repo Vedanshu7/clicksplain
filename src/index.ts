@@ -12,18 +12,20 @@ import {
   ByoEndpointConnector,
   type ByoEndpointConnectorConfig,
 } from "./connectors/byoEndpoint/ByoEndpointConnector";
+import { PuterConnector, type PuterConnectorConfig } from "./connectors/puter/PuterConnector";
 import type { AgentConnector, ChatRequest, ElementInfo } from "./connectors/types";
 import { ExplanationCache, type CacheConfig } from "./cache/ExplanationCache";
 import { resolveExplanation } from "./explain/ExplanationResolver";
 
 export interface InitConfig {
-  connector: "byok" | "byo-endpoint";
+  connector: "byok" | "byo-endpoint" | "puter";
   /** byo-endpoint: URL of your own proxy implementing the canonical protocol. */
   endpoint?: string;
   /** byo-endpoint: shared secret matching the proxy's WIDGET_TOKEN, if configured. */
   token?: string;
   /** byok: raw LLM API key. Exposed in the browser: see ByokConnector's warning. */
   apiKey?: string;
+  /** byok/puter: e.g. "claude-haiku-4-5" (byok) or "claude-sonnet-4-6" (puter, see its own model catalog). */
   model?: string;
   /** Independently configurable from `model`: falls back to it if unset. */
   chatModel?: string;
@@ -179,6 +181,11 @@ function createConnector(config: InitConfig): AgentConnector {
     return new ByoEndpointConnector(endpointConfig);
   }
 
+  if (config.connector === "puter") {
+    const puterConfig: PuterConnectorConfig = { model: config.model, chatModel: config.chatModel };
+    return new PuterConnector(puterConfig);
+  }
+
   throw new Error(`[clicksplain] unknown connector "${config.connector}"`);
 }
 
@@ -199,7 +206,7 @@ function readConfigFromScriptTag(): InitConfig | null {
   if (!script) return null;
 
   const connector = script.dataset.connector;
-  if (connector !== "byok" && connector !== "byo-endpoint") return null;
+  if (connector !== "byok" && connector !== "byo-endpoint" && connector !== "puter") return null;
 
   const provider = script.dataset.provider;
   if (provider !== undefined && provider !== "anthropic" && provider !== "openai") {

@@ -1,0 +1,19 @@
+{
+  "name": "clicksplain-proxy-node-http",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Reference BYO-endpoint proxy for clicksplain on plain node:http, demonstrating clicksplain/server/node's toNodeHandler adapter.",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx --env-file=.env.local --watch src/server.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "clicksplain": "file:../.."
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.0"
+  }
+}

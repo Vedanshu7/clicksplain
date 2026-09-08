@@ -3,7 +3,7 @@ import { defineConfig } from "tsup";
 
 const vercelOidcStub = fileURLToPath(new URL("src/stubs/vercel-oidc-stub.ts", import.meta.url));
 
-export default defineConfig({
+const browserConfig = defineConfig({
   entry: { "clicksplain": "src/index.ts" },
   format: ["iife", "esm", "cjs"],
   globalName: "Clicksplain",
@@ -32,3 +32,21 @@ export default defineConfig({
     }
   },
 });
+
+// Server entries: no IIFE (nothing runs it as a <script> tag), no DOM/browser
+// concerns, so a separate config keeps them from sharing the browser build's
+// globalName/alias/minify choices. clean:false since this runs alongside
+// browserConfig in the same `tsup` invocation (an array export) and must not
+// wipe its output.
+const serverConfig = defineConfig({
+  entry: { server: "src/server/index.ts", "server-node": "src/server/node.ts" },
+  format: ["esm", "cjs"],
+  outExtension({ format }) {
+    return format === "esm" ? { js: ".mjs" } : { js: ".cjs" };
+  },
+  sourcemap: true,
+  dts: true,
+  clean: false,
+});
+
+export default [browserConfig, serverConfig];

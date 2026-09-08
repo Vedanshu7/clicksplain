@@ -1,13 +1,5 @@
-export interface ElementInfo {
-  tagName: string;
-  role: string | null;
-  ariaLabel: string | null;
-  id: string | null;
-  classes: string[];
-  nearbyText: string | null;
-  placeholder: string | null;
-  agentId: string | null;
-}
+export type { ElementInfo, ChatTurn } from "../shared/protocol";
+import type { ElementInfo, ChatTurn } from "../shared/protocol";
 
 /** One resolved round of the read-only DOM reasoning loop: see inspectChildren.ts. */
 export interface ToolExchangeEntry {
@@ -23,11 +15,6 @@ export interface ExplainRequest {
   route: string;
   /** Accumulated tool round-trips already resolved for this request (byo-endpoint only). */
   toolExchange?: ToolExchangeEntry[];
-}
-
-export interface ChatTurn {
-  role: "user" | "assistant";
-  text: string;
 }
 
 export interface ChatRequest {

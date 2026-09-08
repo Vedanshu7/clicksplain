@@ -43,10 +43,11 @@ you're editing over anything written here.
   everywhere defensively.
 - No backwards-compatibility shims for removed code. If something is dead,
   delete it outright rather than deprecating it in place.
-- Keep the two reference proxies (`examples/proxy-cloudflare-worker`,
-  `examples/proxy-vercel-edge`) behaviorally in sync. They implement the same
-  wire protocol against two different runtimes: a fix to one (validation,
-  auth, error shape) belongs in both unless it's runtime-specific.
+- The wire protocol (validation, auth, prompt building, model calls, SSE
+  streaming) lives once, in `src/shared/` and `src/server/createHandler.ts`.
+  `examples/proxy-node-http` is a thin wrapper around
+  `createClicksplainHandler`: there's no separate logic in it to keep in
+  sync. A fix belongs in `src/shared/` or `src/server/`, not the example.
 
 ## Security-sensitive code
 

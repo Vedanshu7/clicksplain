@@ -33,6 +33,16 @@
       "types": "./dist/clicksplain.d.ts",
       "import": "./dist/clicksplain.mjs",
       "require": "./dist/clicksplain.cjs"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.mjs",
+      "require": "./dist/server.cjs"
+    },
+    "./server/node": {
+      "types": "./dist/server-node.d.ts",
+      "import": "./dist/server-node.mjs",
+      "require": "./dist/server-node.cjs"
     }
   },
   "files": [

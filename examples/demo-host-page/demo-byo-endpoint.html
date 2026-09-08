@@ -109,13 +109,13 @@
   </div>
 
   <p class="note">
-    <strong>byo-endpoint connector demo.</strong> Run <code>examples/proxy-cloudflare-worker</code>
-    locally (<code>npm run dev</code>, port 8787) for a real round trip, or leave it stopped to see
+    <strong>byo-endpoint connector demo.</strong> Run <code>examples/proxy-node-http</code>
+    locally (<code>npm run dev</code>, port 8788) for a real round trip, or leave it stopped to see
     the graceful "proxy unreachable" error path instead of a hang. Click the "?" button bottom-right,
     then try the tagged <strong>Invite teammate</strong> button (instant, hardcoded), an untagged
     action button (streams once, then caches), or the email form (triggers the read-only DOM
     reasoning tool via the proxy relay, since a form's own text never says what's inside it).
-    If your local <code>.dev.vars</code> sets <code>WIDGET_TOKEN</code>, pass the same value via
+    If your local <code>.env.local</code> sets <code>WIDGET_TOKEN</code>, pass the same value via
     <code>?token=...</code> in this page's URL.
   </p>
 
@@ -123,8 +123,8 @@
   <script>
     Clicksplain.init({
       connector: "byo-endpoint",
-      endpoint: "http://localhost:8787",
-      // Only needed if the Worker has WIDGET_TOKEN set (recommended for
+      endpoint: "http://localhost:8788",
+      // Only needed if the server has WIDGET_TOKEN set (recommended for
       // production, optional for local testing): pass the matching value
       // via ?token=... here, or hardcode it in a real app.
       token: new URLSearchParams(window.location.search).get("token") || undefined,

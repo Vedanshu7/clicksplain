@@ -59,15 +59,15 @@
     (<code>.button</code>, <code>.popover</code>), z-index traps, and an aggressive
     <code>* { all: revert }</code> reset. If the "?" fab, cursor, highlight box, and
     popover all still render and work correctly here, the widget's Shadow DOM
-    boundary is holding. Requires <code>examples/proxy-cloudflare-worker</code>
-    running locally on port 8787.
+    boundary is holding. Requires <code>examples/proxy-node-http</code>
+    running locally on port 8788.
   </p>
 
   <script src="../../dist/clicksplain.global.js"></script>
   <script>
     Clicksplain.init({
       connector: "byo-endpoint",
-      endpoint: "http://localhost:8787",
+      endpoint: "http://localhost:8788",
       token: new URLSearchParams(window.location.search).get("token") || undefined,
       docsConfig: {
         [window.location.pathname]: {

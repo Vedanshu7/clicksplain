@@ -8,7 +8,7 @@ A drop-in, AI-powered "explain this UI" widget. Click the "?" button, then click
 100% client-side library, no backend we run. Ships two ways to connect an LLM:
 
 - **BYOK**: pass a raw API key directly (dev/prototyping only, key is visible in the browser).
-- **BYO-endpoint**: point at your own tiny proxy (recommended for production). Reference templates for Cloudflare Workers and Vercel Edge Functions are in `examples/`.
+- **BYO-endpoint**: point at your own tiny proxy (recommended for production). `clicksplain/server` ships the actual handler; mount it in whatever server you already run (see below) or copy the reference example in `examples/proxy-node-http`.
 
 ## Quick start
 
@@ -25,6 +25,43 @@ npm install clicksplain
 ```
 
 See `examples/demo-host-page/` for a working local demo of both connector modes.
+
+## Server-side (byo-endpoint backend)
+
+`clicksplain/server` exports `createClicksplainHandler`, a runtime-agnostic
+`(Request) => Promise<Response>` implementing the full byo-endpoint protocol
+(validation, auth, prompt building, streaming). Anything that speaks the
+standard Fetch API needs zero adapter code: Cloudflare Workers, Vercel Edge
+Functions, Next.js Route Handlers, Deno, Bun, Hono.
+
+```ts
+// app/api/clicksplain/route.ts (Next.js), or any other Fetch-API runtime
+import { createClicksplainHandler } from "clicksplain/server";
+
+export const POST = createClicksplainHandler({
+  apiKey: process.env.CLICKSPLAIN_API_KEY!,
+  widgetToken: process.env.CLICKSPLAIN_WIDGET_TOKEN, // optional but recommended
+});
+```
+
+For classic Node-callback servers (Express, plain `node:http`), wrap it with
+`toNodeHandler` from `clicksplain/server/node`:
+
+```ts
+import { createServer } from "node:http";
+import { createClicksplainHandler } from "clicksplain/server";
+import { toNodeHandler } from "clicksplain/server/node";
+
+const handler = createClicksplainHandler({ apiKey: process.env.API_KEY! });
+createServer(toNodeHandler(handler)).listen(8788);
+```
+
+`createClicksplainHandler` never reads `process.env` (or any platform global)
+itself: every config value is passed in explicitly, since some runtimes
+(Cloudflare Workers) have no `process.env` at all. See
+`examples/proxy-node-http` for the Node-adapter path end-to-end; the same
+handler mounts with zero adapter code on Cloudflare Workers, Vercel Edge
+Functions, or any other Fetch-API runtime, as shown in the snippet above.
 
 ## Theming
 

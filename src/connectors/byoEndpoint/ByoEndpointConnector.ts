@@ -1,6 +1,10 @@
 import type { AgentConnector, ChatRequest, ExplainChunk, ExplainRequest, ToolExchangeEntry } from "../types";
 import { parseSseStream } from "../sse";
 import { inspectChildren } from "../../context/inspectChildren";
+// At most one inspect_children round-trip per explain/chat call: matches the
+// same bound the server enforces (src/shared/protocol.ts), so a click can
+// never turn into an unbounded loop of requests.
+import { MAX_TOOL_ROUNDS } from "../../shared/protocol";
 
 export interface ByoEndpointConnectorConfig {
   endpoint: string;
@@ -20,11 +24,6 @@ interface PendingToolCall {
   toolName: string;
   input: unknown;
 }
-
-// At most one inspect_children round-trip per explain/chat call: matches the
-// proxy's own MAX_TOOL_ROUNDS bound (see examples/proxy-*/src/index.ts), so a
-// click can never turn into an unbounded loop of requests.
-const MAX_TOOL_ROUNDS = 1;
 
 /**
  * Streams from an adopter-owned proxy (e.g. the reference Cloudflare Worker or
