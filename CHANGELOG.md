@@ -1,0 +1,28 @@
+# Changelog
+
+## 1.0.0 (unreleased)
+
+First npm release.
+
+### Widget
+
+- Three connectors: `byo-endpoint` (your own server, recommended), `puter` (no key, no backend), and BYOK via the separate `clicksplain/byok` entry.
+- The default bundle no longer ships the AI SDK: `clicksplain.global.js` is about 18 KB brotlied; BYOK lives in `clicksplain-byok.global.js`.
+- BYOK refuses to start on non-local hosts unless `strictOrigins` or `dangerouslyAllowBrowser` is set, and is no longer available through `<script data-api-key>`.
+- Picking an element ends inspect mode, like a DevTools picker: the page stays usable while the explanation is open.
+- Presses during inspect mode no longer reach the page (pointer/mouse events, not just click); pick works inside open shadow roots, on disabled controls, through browser page translation, and from the keyboard.
+- `data-clicksplain-ignore` and `data-clicksplain-redact` let adopters keep regions out of explanations or out of the prompt.
+- Answers come back in the page's `<html lang>` language.
+- An element with no text of its own no longer borrows the text of a neighboring button or link as its description (a form next to an "Export report" button was being explained as an export form).
+- New options: `timeoutMs`, `position`, `labels`.
+- Works under a strict Content-Security-Policy (no `'unsafe-inline'` styles needed).
+- Accessibility: focus moves into the popover and back, visible focus rings, quieter screen reader announcements, larger close target.
+
+### Server (`clicksplain/server`)
+
+- `allowedOrigins` (403 for any other origin), `onRequest` hook for rate limiting, `maxBodyBytes` (413).
+- Client disconnects abort the upstream LLM call.
+- Tool results from the client are validated as element info, not opaque JSON.
+- Logs never include the raw provider error object (page content, provider response).
+- `toNodeHandler` streams the request body, honors backpressure, and no longer crashes the process on a mid-stream error.
+- Portkey gateway URLs must be `https://` unless on localhost.

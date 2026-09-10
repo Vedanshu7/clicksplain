@@ -19,7 +19,9 @@ interface CacheStore {
   entries: Record<string, Record<string, CacheEntry>>;
 }
 
-const STORAGE_KEY = "clicksplain:cache:v1";
+// Bump the version whenever the signature or prompts change meaning, so stale
+// explanations from an older widget build are never served.
+const STORAGE_KEY = "clicksplain:cache:v2";
 const DEFAULT_TTL_DAYS = 30;
 const DEFAULT_MAX_ENTRIES = 300;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -40,8 +42,8 @@ export class ExplanationCache {
     this.maxEntries = config.maxEntries ?? DEFAULT_MAX_ENTRIES;
   }
 
-  get(route: string, elementInfo: ElementInfo): string | null {
-    const signature = deriveElementSignature(elementInfo);
+  get(route: string, elementInfo: ElementInfo, pageLanguage: string | null): string | null {
+    const signature = deriveElementSignature(elementInfo, pageLanguage);
     const store = readStore();
     const bySignature = store.entries[route];
     const entry = bySignature?.[signature];
@@ -56,8 +58,8 @@ export class ExplanationCache {
     return entry.text;
   }
 
-  set(route: string, elementInfo: ElementInfo, text: string): void {
-    const signature = deriveElementSignature(elementInfo);
+  set(route: string, elementInfo: ElementInfo, pageLanguage: string | null, text: string): void {
+    const signature = deriveElementSignature(elementInfo, pageLanguage);
     const store = readStore();
     const now = Date.now();
 

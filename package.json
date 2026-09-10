@@ -1,7 +1,7 @@
 {
   "name": "clicksplain",
   "version": "1.0.0",
-  "description": "Drop-in AI widget that explains any UI element on click. Ships with LLM connectors and reference proxy templates; no hosted backend.",
+  "description": "Drop-in AI widget that explains any UI element on click. Ships the browser widget, LLM connectors, and a runtime-agnostic server handler; no hosted backend.",
   "license": "MIT",
   "author": "Vedanshu Joshi",
   "homepage": "https://github.com/Vedanshu7/clicksplain#readme",
@@ -30,29 +30,69 @@
   "jsdelivr": "./dist/clicksplain.global.js",
   "exports": {
     ".": {
-      "types": "./dist/clicksplain.d.ts",
-      "import": "./dist/clicksplain.mjs",
-      "require": "./dist/clicksplain.cjs"
+      "import": {
+        "types": "./dist/clicksplain.d.ts",
+        "default": "./dist/clicksplain.mjs"
+      },
+      "require": {
+        "types": "./dist/clicksplain.d.cts",
+        "default": "./dist/clicksplain.cjs"
+      }
+    },
+    "./byok": {
+      "import": {
+        "types": "./dist/byok.d.ts",
+        "default": "./dist/byok.mjs"
+      },
+      "require": {
+        "types": "./dist/byok.d.cts",
+        "default": "./dist/byok.cjs"
+      }
     },
     "./server": {
-      "types": "./dist/server.d.ts",
-      "import": "./dist/server.mjs",
-      "require": "./dist/server.cjs"
+      "import": {
+        "types": "./dist/server.d.ts",
+        "default": "./dist/server.mjs"
+      },
+      "require": {
+        "types": "./dist/server.d.cts",
+        "default": "./dist/server.cjs"
+      }
     },
     "./server/node": {
-      "types": "./dist/server-node.d.ts",
-      "import": "./dist/server-node.mjs",
-      "require": "./dist/server-node.cjs"
-    }
+      "import": {
+        "types": "./dist/server-node.d.ts",
+        "default": "./dist/server-node.mjs"
+      },
+      "require": {
+        "types": "./dist/server-node.d.cts",
+        "default": "./dist/server-node.cjs"
+      }
+    },
+    "./global": "./dist/clicksplain.global.js",
+    "./byok/global": "./dist/clicksplain-byok.global.js",
+    "./package.json": "./package.json"
   },
+  "sideEffects": [
+    "./dist/*.global.js"
+  ],
   "files": [
     "dist",
     "README.md"
   ],
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "build": "tsup",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "build": "npm run clean && tsup",
     "dev": "tsup --watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "size": "size-limit",
+    "check:pkg": "publint && attw --pack . --profile node16 --exclude-entrypoints ./global ./byok/global ./package.json",
+    "prepublishOnly": "npm run typecheck && npm run lint && npm test && npm run build && npm run size && npm run check:pkg"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.34",
@@ -62,7 +102,16 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@eslint/js": "^9.39.5",
+    "@size-limit/file": "^11.2.0",
+    "eslint": "^9.39.5",
+    "happy-dom": "^21.0.4",
+    "publint": "^0.3.25",
+    "size-limit": "^11.2.0",
     "tsup": "^8.0.0",
-    "typescript": "^5.5.0"
+    "typescript": "^5.5.0",
+    "typescript-eslint": "^8.72.0",
+    "vitest": "^3.2.7"
   }
 }

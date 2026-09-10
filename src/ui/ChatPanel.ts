@@ -1,3 +1,5 @@
+import type { Labels } from "./labels";
+
 export type ChatSubmitHandler = (question: string) => void;
 
 /**
@@ -16,13 +18,14 @@ export class ChatPanel {
   private activeAssistantTurn: HTMLDivElement | null = null;
   private loadingTurn: HTMLDivElement | null = null;
 
-  constructor(mount: HTMLElement) {
+  constructor(mount: HTMLElement, labels: Labels) {
     this.root = document.createElement("div");
     this.root.className = "oa-popover-chat";
     this.root.style.display = "none";
 
     this.turnsList = document.createElement("div");
     this.turnsList.className = "oa-popover-chat-turns";
+    this.turnsList.setAttribute("aria-live", "polite");
 
     this.form = document.createElement("form");
     this.form.className = "oa-popover-chat-form";
@@ -31,13 +34,13 @@ export class ChatPanel {
     this.input = document.createElement("input");
     this.input.type = "text";
     this.input.className = "oa-popover-chat-input";
-    this.input.placeholder = "Ask a follow-up…";
-    this.input.setAttribute("aria-label", "Ask a follow-up question");
+    this.input.placeholder = labels.followUpPlaceholder;
+    this.input.setAttribute("aria-label", labels.followUpInput);
 
     this.sendButton = document.createElement("button");
     this.sendButton.type = "submit";
     this.sendButton.className = "oa-popover-chat-send";
-    this.sendButton.textContent = "Ask";
+    this.sendButton.textContent = labels.followUpSend;
 
     this.form.append(this.input, this.sendButton);
     this.root.append(this.turnsList, this.form);
@@ -85,6 +88,9 @@ export class ChatPanel {
   completeAssistantTurn(): void {
     this.activeAssistantTurn = null;
     this.setSubmitting(false);
+    // Disabling the input mid-turn dropped its focus: give it back so a
+    // keyboard user can ask the next question without hunting for the field.
+    this.input.focus({ preventScroll: true });
   }
 
   setError(message: string): void {
@@ -95,6 +101,7 @@ export class ChatPanel {
     this.turnsList.appendChild(turn);
     this.activeAssistantTurn = null;
     this.setSubmitting(false);
+    this.input.focus({ preventScroll: true });
   }
 
   /** Hides the form and clears turns/input: called on close and on re-picking a new element. */
@@ -111,6 +118,7 @@ export class ChatPanel {
   private setSubmitting(submitting: boolean): void {
     this.input.disabled = submitting;
     this.sendButton.disabled = submitting;
+    this.turnsList.setAttribute("aria-busy", String(submitting));
   }
 
   private handleSubmit = (event: SubmitEvent): void => {

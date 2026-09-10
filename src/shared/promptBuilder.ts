@@ -1,27 +1,19 @@
-import type { ElementInfo } from "./protocol";
+import type { ChatTurn, ElementInfo, ToolExchangeEntry } from "./wire";
 
-// Structural, not the wire-protocol types from ./protocol.ts directly: both the
-// client's ExplainRequest/ChatRequest (connectors/types.ts) and the server's
-// ExplainRequestBody/ChatRequestBody (./protocol.ts) satisfy these without a cast.
-// The two differ in exactly the fields these functions never touch (server's
-// `mode` discriminator; the client's more precisely-typed ToolExchangeEntry).
-interface ToolExchangeEntryLike {
-  toolCallId: string;
-  toolName: string;
-  input: unknown;
-  result: unknown;
-}
-
+// Structural, so both the client's ExplainRequest/ChatRequest (connectors/types.ts)
+// and the server's ExplainRequestBody/ChatRequestBody (./protocol.ts, which add a
+// `mode` discriminator) satisfy these without a cast.
 interface ExplainLike {
   elementInfo: ElementInfo;
   docsContext: string | null;
   route: string;
-  toolExchange?: ToolExchangeEntryLike[];
+  pageLanguage?: string | null;
+  toolExchange?: ToolExchangeEntry[];
 }
 
 interface ChatLike extends ExplainLike {
   baseExplanation: string;
-  history: { role: "user" | "assistant"; text: string }[];
+  history: ChatTurn[];
   question: string;
 }
 
@@ -44,6 +36,7 @@ export function buildSystemPrompt(): string {
     "its direct contents before answering, but only when you genuinely need to, not for things you",
     "can already explain confidently. If you do check, say so first in one short, friendly phrase",
     '(for example: "Let me check what\'s inside...") before giving the real answer, leaving a blank line between the two so they read as separate thoughts.',
+    "If a page language is given, write your whole answer in that language.",
   ].join(" ");
 }
 
@@ -60,12 +53,15 @@ export function buildChatSystemPrompt(): string {
     "guessing. If the question is about what's inside a container (like a form, menu, or list) and",
     "you don't already know, use the inspect_children tool to check before answering: say so first",
     'in one short friendly phrase (for example: "Let me check...") before giving the real answer, leaving a blank line between the two so they read as separate thoughts.',
+    "If a page language is given, write your whole answer in that language.",
   ].join(" ");
 }
 
-function elementContextLines(elementInfo: ElementInfo, docsContext: string | null, route: string): string[] {
+function elementContextLines(req: ExplainLike): string[] {
+  const { elementInfo, docsContext, route, pageLanguage } = req;
   const lines: string[] = [`Page route: ${route}`, `Element tag: ${elementInfo.tagName}`];
 
+  if (pageLanguage) lines.push(`Page language: ${pageLanguage}`);
   if (elementInfo.role) lines.push(`ARIA role: ${elementInfo.role}`);
   if (elementInfo.ariaLabel) lines.push(`Label: ${elementInfo.ariaLabel}`);
   if (elementInfo.nearbyText) lines.push(`Nearby/own text: ${elementInfo.nearbyText}`);
@@ -79,12 +75,12 @@ function elementContextLines(elementInfo: ElementInfo, docsContext: string | nul
 }
 
 export function buildUserMessage(req: ExplainLike): string {
-  return elementContextLines(req.elementInfo, req.docsContext, req.route).join("\n");
+  return elementContextLines(req).join("\n");
 }
 
 /** The framing content fused into the first real user turn: element context + what was already shown. */
 function buildChatContextMessage(req: ChatLike): string {
-  const lines = elementContextLines(req.elementInfo, req.docsContext, req.route);
+  const lines = elementContextLines(req);
   lines.push(`Explanation already shown: ${req.baseExplanation}`);
   return lines.join("\n");
 }
@@ -99,7 +95,7 @@ function buildChatContextMessage(req: ChatLike): string {
  * multi-step loop handles tool calls in-memory within one streamText call, so
  * this is always a no-op there).
  */
-function toolExchangeMessages(toolExchange: ToolExchangeEntryLike[]) {
+function toolExchangeMessages(toolExchange: ToolExchangeEntry[]) {
   return toolExchange.flatMap((entry) => [
     {
       role: "assistant" as const,

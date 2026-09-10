@@ -1,0 +1,6 @@
+[extend]
+useDefault = true
+
+# Placeholder keys in example env files and the sentinel used by the leak test.
+[allowlist]
+regexes = ['''sk-ant-your-real-key-here''', '''sk-ant-SENTINEL[\w-]*''']

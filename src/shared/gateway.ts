@@ -54,6 +54,16 @@ export function createModel(
           'should route to, e.g. "anthropic") to be set.'
       );
     }
+    // The provider key travels to the gateway as `Authorization: Bearer`, so a
+    // plain-http gateway is only acceptable when it never leaves this machine.
+    const gatewayUrl = new URL(options.portkeyGatewayUrl);
+    const isLoopback = ["localhost", "127.0.0.1", "[::1]"].includes(gatewayUrl.hostname);
+    if (gatewayUrl.protocol !== "https:" && !isLoopback) {
+      throw new Error(
+        '[clicksplain] provider "portkey" requires an https:// portkeyGatewayUrl (plain http is ' +
+          "only allowed for localhost): your provider API key is sent to it on every request."
+      );
+    }
     // `.chat(modelId)`, not the bare `(modelId)` call: the latter defaults to
     // OpenAI's newer Responses API, which Portkey's gateway doesn't speak for
     // non-OpenAI providers ("createModelResponse is not supported by <provider>",

@@ -1,0 +1,5 @@
+[
+  { "name": "widget <script> (byo-endpoint, puter)", "path": "dist/clicksplain.global.js", "limit": "22 KB" },
+  { "name": "widget <script> with BYOK", "path": "dist/clicksplain-byok.global.js", "limit": "210 KB" },
+  { "name": "npm entry, core", "path": "dist/clicksplain.mjs", "limit": "12 KB" }
+]

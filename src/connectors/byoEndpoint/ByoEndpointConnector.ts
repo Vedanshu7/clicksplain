@@ -1,10 +1,7 @@
 import type { AgentConnector, ChatRequest, ExplainChunk, ExplainRequest, ToolExchangeEntry } from "../types";
 import { parseSseStream } from "../sse";
 import { inspectChildren } from "../../context/inspectChildren";
-// At most one inspect_children round-trip per explain/chat call: matches the
-// same bound the server enforces (src/shared/protocol.ts), so a click can
-// never turn into an unbounded loop of requests.
-import { MAX_TOOL_ROUNDS } from "../../shared/protocol";
+import { MAX_TOOL_ROUNDS } from "../../shared/wire";
 
 export interface ByoEndpointConnectorConfig {
   endpoint: string;
@@ -120,7 +117,7 @@ export class ByoEndpointConnector implements AgentConnector {
     });
 
     if (!response.ok || !response.body) {
-      throw new Error(`clicksplain proxy error (${response.status})`);
+      throw new ProxyHttpError(response.status);
     }
 
     for await (const frame of parseSseStream(response.body)) {
@@ -139,6 +136,17 @@ export class ByoEndpointConnector implements AgentConnector {
     }
 
     return { toolCall: null };
+  }
+}
+
+/**
+ * The endpoint answered with a non-2xx status. Its details are for the
+ * developer (logged), not the visitor, who sees the generic error label.
+ */
+export class ProxyHttpError extends Error {
+  constructor(readonly status: number) {
+    super(`clicksplain endpoint responded with HTTP ${status}`);
+    this.name = "ProxyHttpError";
   }
 }
 

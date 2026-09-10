@@ -1,7 +1,7 @@
 import type { ElementInfo } from "../connectors/types";
+import { MAX_CHILDREN } from "../shared/wire";
 import { extractElementInfo } from "./ElementInfoExtractor";
-
-const MAX_CHILDREN = 20;
+import { isIgnored } from "./privacy";
 
 /**
  * Read-only summary of a container element's direct children: used by the
@@ -12,6 +12,8 @@ const MAX_CHILDREN = 20;
  * existing heuristics per child, which already never reads input `.value`.
  */
 export function inspectChildren(element: Element): ElementInfo[] {
-  const children = Array.from(element.children).slice(0, MAX_CHILDREN);
+  const children = Array.from(element.children)
+    .filter((child) => !isIgnored(child))
+    .slice(0, MAX_CHILDREN);
   return children.map((child) => extractElementInfo(child));
 }

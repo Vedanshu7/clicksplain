@@ -2,23 +2,28 @@ import type { ElementInfo } from "../connectors/types";
 
 /**
  * Derives a stable per-element cache key. Prefers data-agent-id when present
- * (a developer has explicitly promised it's stable); otherwise hashes a subset
- * of ElementInfo fields chosen for run-to-run stability: deliberately excludes
- * DOM `id` (often framework-generated, can churn across renders) and `placeholder`
- * (can legitimately vary, e.g. localized or dynamic hint text).
+ * (a developer has explicitly promised it's stable); otherwise hashes every
+ * ElementInfo field the prompt is built from, so two elements share a cached
+ * answer only when the model would have been asked the exact same question.
  */
-export function deriveElementSignature(elementInfo: ElementInfo): string {
-  if (elementInfo.agentId) return `id:${elementInfo.agentId}`;
+export function deriveElementSignature(elementInfo: ElementInfo, pageLanguage: string | null): string {
+  // Same element, different page language: a different answer.
+  const lang = pageLanguage ? `${pageLanguage}:` : "";
+  if (elementInfo.agentId) return `${lang}id:${elementInfo.agentId}`;
 
-  const stable = [
+  // JSON rather than a joined string: field values may themselves contain any
+  // separator character, which would let two different elements collide.
+  const stable = JSON.stringify([
     elementInfo.tagName,
-    elementInfo.role ?? "",
-    elementInfo.ariaLabel ?? "",
-    [...elementInfo.classes].sort().join(","),
-    elementInfo.nearbyText ?? "",
-  ].join("|");
+    elementInfo.role,
+    elementInfo.ariaLabel,
+    elementInfo.id,
+    [...elementInfo.classes].sort(),
+    elementInfo.nearbyText,
+    elementInfo.placeholder,
+  ]);
 
-  return `sig:${djb2(stable)}`;
+  return `${lang}sig:${djb2(stable)}`;
 }
 
 // Non-cryptographic string hash: only used to keep cache keys short and avoid

@@ -1,18 +1,12 @@
-export type { ElementInfo, ChatTurn } from "../shared/protocol";
-import type { ElementInfo, ChatTurn } from "../shared/protocol";
-
-/** One resolved round of the read-only DOM reasoning loop: see inspectChildren.ts. */
-export interface ToolExchangeEntry {
-  toolCallId: string;
-  toolName: "inspect_children";
-  input: Record<string, never>;
-  result: ElementInfo[];
-}
+export type { ElementInfo, ChatTurn, ToolExchangeEntry } from "../shared/wire";
+import type { ElementInfo, ChatTurn, ToolExchangeEntry } from "../shared/wire";
 
 export interface ExplainRequest {
   elementInfo: ElementInfo;
   docsContext: string | null;
   route: string;
+  /** The page's `<html lang>`, so the answer comes back in the page's language. */
+  pageLanguage: string | null;
   /** Accumulated tool round-trips already resolved for this request (byo-endpoint only). */
   toolExchange?: ToolExchangeEntry[];
 }
@@ -21,6 +15,7 @@ export interface ChatRequest {
   elementInfo: ElementInfo;
   docsContext: string | null;
   route: string;
+  pageLanguage: string | null;
   baseExplanation: string;
   history: ChatTurn[];
   question: string;

@@ -62,8 +62,9 @@
 .oa-fab {
   all: unset;
   position: fixed;
-  right: 20px;
-  bottom: 20px;
+  /* Clear the home indicator / rounded corners on notched phones. */
+  right: calc(20px + env(safe-area-inset-right, 0px));
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   width: 48px;
   height: 48px;
   border-radius: 50%;
@@ -170,6 +171,9 @@
   border-radius: var(--oa-radius);
   box-shadow: var(--oa-shadow);
   padding: 14px 16px;
+  /* max-height is set by PopoverRenderer from the space actually available. */
+  overflow-y: auto;
+  overscroll-behavior: contain;
   pointer-events: none;
   opacity: 0;
   /* transform (translate+scale) is fully owned by PopoverRenderer/animations.ts,
@@ -181,6 +185,27 @@
 .oa-popover.oa-visible {
   opacity: 1;
   pointer-events: auto;
+}
+
+/* Focus lands on the panel itself when it opens; the ring belongs on the
+   controls inside it, not around the whole card. */
+.oa-popover:focus {
+  outline: none;
+}
+
+/* `all: unset` on the controls below also strips the browser's focus ring,
+   so keyboard users need one put back explicitly. */
+.oa-mount[data-position="bottom-left"] .oa-fab {
+  right: auto;
+  left: calc(20px + env(safe-area-inset-left, 0px));
+}
+
+.oa-fab:focus-visible,
+.oa-popover-close:focus-visible,
+.oa-popover-chat-input:focus-visible,
+.oa-popover-chat-send:focus-visible {
+  outline: 2px solid var(--oa-accent);
+  outline-offset: 2px;
 }
 
 .oa-popover-content {
@@ -242,11 +267,17 @@
 .oa-popover-close {
   all: unset;
   position: absolute;
-  top: 8px;
-  right: 10px;
+  top: 4px;
+  right: 4px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
   cursor: pointer;
   font-size: 13px;
-  opacity: 0.5;
+  opacity: 0.65;
   pointer-events: auto;
 }
 
@@ -319,6 +350,13 @@
   pointer-events: auto;
 }
 
+/* iOS zooms the whole page when a focused input's text is under 16px. */
+@media (pointer: coarse) {
+  .oa-popover-chat-input {
+    font-size: 16px;
+  }
+}
+
 .oa-popover-chat-input:disabled {
   opacity: 0.6;
 }
@@ -343,4 +381,11 @@
 .oa-popover-chat-send:disabled {
   opacity: 0.6;
   cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oa-popover,
+  .oa-highlight-box {
+    transition: none;
+  }
 }

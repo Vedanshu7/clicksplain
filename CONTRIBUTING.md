@@ -24,44 +24,55 @@ change that matches it will look like it belongs.
 git clone https://github.com/Vedanshu7/clicksplain.git
 cd clicksplain
 npm install
-npm run build      # produces dist/clicksplain.{global.js,mjs,cjs} and dist/server*.{mjs,cjs}
-npm run dev         # tsup --watch, rebuilds on save
-npm run typecheck   # must be clean before you open a PR
+npm run build      # dist/: widget (clicksplain*.global.js, .mjs, .cjs), byok, server entries
+npm run dev        # tsup --watch, rebuilds on save
+npm test           # vitest
+npm run typecheck
+npm run lint
+npm run prepublishOnly   # everything CI runs: the above plus size and package checks
 ```
 
-The reference proxy example has its own `package.json` and is developed
-independently:
+The two server examples (`examples/proxy-node-http`, `examples/demo-nextjs`)
+each have their own `package.json` and are developed independently:
 
 ```bash
 cd examples/proxy-node-http && npm install && npm run dev   # tsx --watch, port 8788
+cd examples/demo-nextjs && npm install && npm run dev       # next dev, port 3000
 ```
 
-It has an `.env.local.example`: copy it, fill in a real API key, and don't
+Each has an `.env.local.example`: copy it, fill in a real API key, and don't
 commit the copy (already gitignored).
 
-It depends on the root package via `"clicksplain": "file:../.."`. Run
+Both depend on the root package via `"clicksplain": "file:../.."`. Run
 `npm run build` at the repo root first (and again after any change to
 `src/shared/`, `src/server/`, or `src/connectors/`), since `file:` dependencies
 don't rebuild automatically.
 
 ## Testing your change
 
-There's no automated test suite yet (see CODE_STYLE.md's Tooling section;
-if you want to add one, open an issue to agree on a framework first).
-Changes are verified manually:
+`npm test` runs the vitest suite in `test/`: the wire protocol, the server
+handler (against a stubbed provider stream), the Node adapter (against a real
+`node:http` server), the SSE parser, the cache, and the BYOK origin guard.
+Add a test with any change to those. CI (`.github/workflows/ci.yml`) runs the
+same checks as `npm run prepublishOnly`, typechecks both server examples, and
+scans the history for committed secrets.
+
+UI behavior is verified by hand in a browser:
 
 1. Build the widget (`npm run build`).
-2. Serve `examples/demo-host-page/` locally (any static file server, e.g.
-   `npx serve examples/demo-host-page` or `python3 -m http.server`).
-3. Open `demo-byok.html` or `demo-byo-endpoint.html`, click the "?" fab, and
-   click around, including `fixtures.html`, which exists specifically to
-   stress-test Shadow DOM isolation against hostile host-page CSS
-   (colliding class names, `z-index` traps, `* { all: revert }`). If you
+2. Serve the repo root locally (any static file server, e.g.
+   `python3 -m http.server`, which serves on port 8000), then open
+   `examples/demo-host-page/`.
+3. Open `demo-byo-endpoint.html` (with `examples/proxy-node-http` running),
+   `demo-puter.html`, or `demo-byok.html` (paste a test key into its form),
+   click the "?" fab, and click around, including `fixtures.html`, which exists
+   specifically to stress-test Shadow DOM isolation against hostile host-page
+   CSS (colliding class names, `z-index` traps, `* { all: revert }`). If you
    touch positioning, Shadow DOM boundaries, or theming, check this page.
-4. If your change touches `src/shared/`, `src/server/`, or
-   `examples/proxy-node-http`, hit the example directly with `curl` for the
-   error paths (missing fields, oversized payloads, wrong/missing token);
-   don't only test the happy path through the widget.
+4. If your change touches `src/shared/` or `src/server/`, also hit
+   `examples/proxy-node-http` with `curl` for the error paths (disallowed
+   origin, oversized body, wrong token, rate limit), not only the happy path
+   through the widget.
 
 ## Pull requests
 

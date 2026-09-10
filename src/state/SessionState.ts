@@ -1,7 +1,5 @@
 export type SessionMode = "idle" | "inspecting";
 
-export interface ModeChangeEvent extends CustomEvent<{ mode: SessionMode }> {}
-
 /**
  * Tracks inspect-mode on/off and owns the AbortController for the current
  * in-flight explain stream, so picking a new element always cancels the last one.

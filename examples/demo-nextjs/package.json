@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "predev": "cp node_modules/clicksplain/dist/clicksplain.global.js public/clicksplain.global.js",
+    "predev": "node -e \"require('fs').copyFileSync(require.resolve('clicksplain/global'), 'public/clicksplain.global.js')\"",
     "dev": "next dev",
-    "prebuild": "cp node_modules/clicksplain/dist/clicksplain.global.js public/clicksplain.global.js",
+    "prebuild": "node -e \"require('fs').copyFileSync(require.resolve('clicksplain/global'), 'public/clicksplain.global.js')\"",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit"

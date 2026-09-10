@@ -15,7 +15,7 @@ const handler = createClicksplainHandler({
   model: process.env.MODEL,
   chatModel: process.env.CHAT_MODEL,
   widgetToken: process.env.WIDGET_TOKEN,
-  allowedOrigin: process.env.ALLOWED_ORIGIN,
+  allowedOrigins: process.env.ALLOWED_ORIGINS?.split(",").map((origin) => origin.trim()),
   portkeyGatewayUrl: process.env.PORTKEY_GATEWAY_URL,
   portkeyProvider: process.env.PORTKEY_PROVIDER,
 });
@@ -30,19 +30,26 @@ as Cloudflare Workers or Vercel Edge Functions.
 
 ## Client-side: `src/app/ClicksplainWidget.tsx`
 
-Loads the pre-built widget bundle (`clicksplain.global.js`, copied from
-`node_modules/clicksplain/dist` into `public/` by the `predev`/`prebuild`
-scripts in `package.json`) via `next/script`, then calls `Clicksplain.init()`
+Loads the pre-built widget bundle (`clicksplain/global`, copied into
+`public/` by the `predev`/`prebuild` scripts in `package.json`) via `next/script`, then calls `Clicksplain.init()`
 once it's loaded, pointed at the Route Handler above. Mounted once in
 `src/app/layout.tsx` so it's active across the whole app.
 
 ## Setup
 
+Requires Node 22 or later. This example installs the package from the repo
+root (`"clicksplain": "file:../.."`), so build that first:
+
 ```bash
+(cd ../.. && npm install && npm run build)
 npm install
 cp .env.local.example .env.local   # then fill in your real key
 npm run dev
 ```
+
+Copying this example out of the repo? Replace `file:../..` with a real
+version (`npm install clicksplain`) and drop the `turbopack.root` setting in
+`next.config.ts`, which only exists to follow that local link.
 
 Open `http://localhost:3000`, click the "?" button bottom-right, then click
 the export button or the invite form.
@@ -55,18 +62,19 @@ the export button or the invite form.
 | `PROVIDER` | server | `"anthropic"` (default), `"openai"`, or `"portkey"`. |
 | `MODEL` / `CHAT_MODEL` | server | `MODEL` also used for chat if `CHAT_MODEL` is unset. |
 | `PORTKEY_GATEWAY_URL` / `PORTKEY_PROVIDER` | server | Only used when `PROVIDER=portkey`: your self-hosted [Portkey AI Gateway](https://github.com/Portkey-AI/gateway)'s base URL, and which underlying provider it should route to. See `examples/proxy-node-http/README.md`'s Provider config section for details. |
-| `ALLOWED_ORIGIN` | server | CORS only, largely moot here since the widget calls the same origin. |
-| `WIDGET_TOKEN` | server | The real access control: see Security below. |
+| `ALLOWED_ORIGINS` | server | Comma-separated origins allowed to call the route (`403` otherwise). Browsers send `Origin` on same-origin POSTs too, so in production set it to your own site's origin. |
+| `WIDGET_TOKEN` | server | Shared token the widget must send. Visible in your page, so a speed bump, not a secret. |
 | `NEXT_PUBLIC_CLICKSPLAIN_TOKEN` | client | Must match `WIDGET_TOKEN`. `NEXT_PUBLIC_*` vars are inlined into the browser bundle at build time, same visibility as any client-embedded token. |
 
 ## Security: read before deploying to production
 
 Same considerations as every other `clicksplain` server integration: see
 `examples/proxy-node-http/README.md`'s Security section for the full
-explanation of why `WIDGET_TOKEN` (not `ALLOWED_ORIGIN`) is the real access
-control, and the pre-deploy checklist. Set `WIDGET_TOKEN` and
-`NEXT_PUBLIC_CLICKSPLAIN_TOKEN` to the same real value, and put a rate limiter
-in front of this in production; none is built in.
+picture and the pre-deploy checklist. In short: set `ALLOWED_ORIGINS` to your
+site, add a rate limit through the handler's `onRequest` option (on Vercel,
+backed by a shared store such as Upstash, since functions don't share
+memory), and set `WIDGET_TOKEN` and `NEXT_PUBLIC_CLICKSPLAIN_TOKEN` to the
+same value.
 
 ## Deploy
 

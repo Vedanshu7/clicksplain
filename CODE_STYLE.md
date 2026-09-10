@@ -51,13 +51,17 @@ you're editing over anything written here.
 
 ## Security-sensitive code
 
-This project's trust boundary is the client↔proxy wire protocol: the proxy
-holds a real, billable LLM API key. When touching either proxy template:
+This project's trust boundary is the client↔server wire protocol: the server
+holds a real, billable LLM API key. When touching `src/server/` or
+`src/shared/`:
 
-- Validate the request body with `zod` before using any field from it
-  (`promptBuilder.ts` in each proxy has the schemas).
-- Never echo upstream provider error text back to the caller: log it
-  server-side, return a generic message.
+- Validate the request body with `zod` before using any field from it (the
+  schemas are in `src/shared/protocol.ts`).
+- Keep `src/shared/wire.ts` free of dependencies: the browser core imports it,
+  so pulling `zod` or the AI SDK into it puts them back in the default bundle.
+- Never echo upstream provider error text back to the caller: return a
+  generic message, and log only the error's name, status and message (the raw
+  AI SDK error object carries the request body and the provider's response).
 - Don't add a new field to the request/response shape without a length or
   array-size cap; unauthenticated callers can send anything.
 
@@ -67,23 +71,24 @@ holds a real, billable LLM API key. When touching either proxy template:
   name backed by a `--clicksplain-*` public one (see the file's own header
   comment for the full theme API). Don't hardcode a color, radius, or font
   that should be themeable.
-- `@property` registrations must live in the light-DOM style tag
-  (`shadowHost.ts`), not inside the shadow root's stylesheet: property
-  registration is document-scoped, and registering it inside the shadow root
-  silently fails. See the comment in `shadowHost.ts` if you need the details.
+- Custom property registrations go through `CSS.registerProperty` in
+  `shadowHost.ts`, not an `@property` rule in `shadow.css`: registration is
+  document-scoped, and registering inside the shadow root silently fails.
+- Styles are applied as constructable stylesheets (`adoptedStyleSheets`), so
+  the widget works under a strict CSP. Don't add `<style>` elements or inline
+  `style="..."` attributes; setting `element.style` from script is fine.
 - Respect `prefers-reduced-motion` for anything animated.
 
 ## Tooling
 
-There's no ESLint/Prettier config yet: consistency is currently maintained
-by matching surrounding code and by review. If you're setting one up, open an
-issue first so the config matches what's described here rather than a
-generic default.
+- `npm run lint`: ESLint (`eslint.config.js`, typescript-eslint recommended,
+  no `any`, type-only imports marked as such). There's no formatter: match
+  the surrounding code.
+- `npm run typecheck`: covers `src/` and `test/`, zero errors.
+- `npm test`: vitest, tests live in `test/`. DOM-dependent tests opt into
+  happy-dom with a `// @vitest-environment happy-dom` first line.
+- `npm run size`: the widget bundles have size budgets in `.size-limit.json`.
+  Raising one should be a deliberate decision, called out in the PR.
 
-- `npm run typecheck`: must pass with zero errors before a PR.
-- `npm run build`: must succeed and produce output in `dist/`.
-
-There's no automated test suite yet either. Changes are verified manually
-against `examples/demo-host-page/` (see CONTRIBUTING.md for how). If you're
-adding the first test harness, open an issue to discuss the framework choice
-first.
+`npm run prepublishOnly` runs all of these plus the build and package checks,
+same as CI.

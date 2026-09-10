@@ -109,28 +109,37 @@
   </div>
 
   <p class="note">
-    <strong>BYOK connector demo.</strong> Pass a real test key via <code>?key=sk-ant-...</code> in
-    the URL (never hardcoded here) to see real streamed explanations, or load with no key to see
-    the graceful error path. Open the console to see the BYOK safety warning. Click the "?" button
-    bottom-right, then try the tagged <strong>Invite teammate</strong> button (instant, hardcoded),
-    an untagged action button (streams once, then caches), or the email form (triggers the
-    read-only DOM reasoning tool, since a form's own text never says what's inside it).
+    <strong>BYOK connector demo.</strong> Paste a test key below to see real streamed explanations,
+    or start with it empty to see the graceful error path. The key is kept in memory only (never in
+    the URL, which would leak it into browser history and server logs) and is gone on reload. Open
+    the console to see the BYOK safety warning. Click the "?" button bottom-right, then try the
+    tagged <strong>Invite teammate</strong> button (instant, hardcoded), an untagged action button
+    (streams once, then caches), or the email form (triggers the read-only DOM reasoning tool,
+    since a form's own text never says what's inside it).
   </p>
+  <form class="note" id="byok-key-form">
+    <label for="byok-key">Anthropic API key</label>
+    <input id="byok-key" type="password" autocomplete="off" placeholder="sk-ant-..." />
+    <button type="submit" class="btn btn-primary">Start widget</button>
+  </form>
 
-  <script src="../../dist/clicksplain.global.js"></script>
+  <script src="../../dist/clicksplain-byok.global.js"></script>
   <script>
-    const apiKey = new URLSearchParams(window.location.search).get("key") || "";
-    Clicksplain.init({
-      connector: "byok",
-      apiKey,
-      // Keyed off the current path dynamically so this demo works correctly
-      // however it's served (project root, subpath, different port, etc.),
-      // in a real app you'd hardcode your actual route(s) here instead.
-      docsConfig: {
-        [window.location.pathname]: {
-          "invite-teammates": "Invites a teammate by email; they receive a link that expires in 7 days.",
+    document.getElementById("byok-key-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const input = document.getElementById("byok-key");
+      Clicksplain.init({
+        connector: Clicksplain.byok({ apiKey: input.value || "missing-key" }),
+        // Keyed off the current path dynamically so this demo works correctly
+        // however it's served (project root, subpath, different port, etc.),
+        // in a real app you'd hardcode your actual route(s) here instead.
+        docsConfig: {
+          [window.location.pathname]: {
+            "invite-teammates": "Invites a teammate by email; they receive a link that expires in 7 days.",
+          },
         },
-      },
+      });
+      input.value = "";
     });
   </script>
 </body>

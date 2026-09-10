@@ -11,7 +11,7 @@ const handler = createClicksplainHandler({
   model: process.env.MODEL,
   chatModel: process.env.CHAT_MODEL,
   widgetToken: process.env.WIDGET_TOKEN,
-  allowedOrigin: process.env.ALLOWED_ORIGIN,
+  allowedOrigins: process.env.ALLOWED_ORIGINS?.split(",").map((origin) => origin.trim()),
   portkeyGatewayUrl: process.env.PORTKEY_GATEWAY_URL,
   portkeyProvider: process.env.PORTKEY_PROVIDER,
 });

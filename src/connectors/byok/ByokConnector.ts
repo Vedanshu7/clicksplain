@@ -2,7 +2,7 @@ import { stepCountIs, streamText } from "ai";
 import type { AgentConnector, ChatRequest, ExplainRequest } from "../types";
 import { createModel, MAX_TOKENS, type Provider } from "./gateway";
 import { buildChatMessages, buildChatSystemPrompt, buildExplainMessages, buildSystemPrompt } from "../../shared/promptBuilder";
-import { MAX_TOOL_ROUNDS } from "../../shared/protocol";
+import { MAX_TOOL_ROUNDS } from "../../shared/wire";
 import { createInspectChildrenTool } from "./tools";
 
 export interface ByokConnectorConfig {
@@ -12,10 +12,13 @@ export interface ByokConnectorConfig {
   /** Independently configurable from `model`: falls back to it if unset. */
   chatModel?: string;
   /**
-   * If set, the connector refuses to initialize on any hostname not in this list.
-   * Opt-in enforcement: we don't guess at what counts as "safe" by default.
+   * Hostnames this connector may run on. Without it, BYOK only runs on local
+   * dev hosts (localhost, 127.0.0.1, *.local) unless `dangerouslyAllowBrowser`
+   * is set: anywhere else, every visitor can read the key from DevTools.
    */
   strictOrigins?: string[];
+  /** Run on any host without a strictOrigins list. For internal tools behind auth only. */
+  dangerouslyAllowBrowser?: boolean;
 }
 
 // 1 initial step + 1 tool-augmented follow-up: bounds cost/latency to at most
@@ -69,10 +72,11 @@ export class ByokConnector implements AgentConnector {
   private readonly chatModel: ReturnType<typeof createModel>;
 
   constructor(private readonly config: ByokConnectorConfig) {
+    if (!config.apiKey) throw new Error('[clicksplain] "byok" connector requires apiKey');
+    this.guardAgainstUnsafeOrigin();
     const provider = config.provider ?? "anthropic";
     this.model = createModel(provider, config.model, config.apiKey);
     this.chatModel = createModel(provider, config.chatModel ?? config.model, config.apiKey);
-    this.guardAgainstUnsafeOrigin();
   }
 
   async *explain(element: Element, req: ExplainRequest, signal: AbortSignal): AsyncIterable<string> {
@@ -115,6 +119,14 @@ export class ByokConnector implements AgentConnector {
     }
 
     const looksLikeDevHost = DEV_HOSTNAME_PATTERNS.some((pattern) => pattern.test(hostname));
+    if (!this.config.strictOrigins && !looksLikeDevHost && !this.config.dangerouslyAllowBrowser) {
+      throw new Error(
+        `[clicksplain] BYOK connector refused to initialize on "${hostname}": it would expose ` +
+          "your API key to every visitor. Use the byo-endpoint connector for public sites, or " +
+          "set strictOrigins (or dangerouslyAllowBrowser) for an internal tool behind auth."
+      );
+    }
+
     const hostWarning = looksLikeDevHost
       ? ""
       : `\n(Current host "${hostname}" does not look like a local dev host.)`;

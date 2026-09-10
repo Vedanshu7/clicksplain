@@ -1,7 +1,11 @@
 import type { AgentConnector, ChatRequest, ExplainRequest } from "../types";
 import { buildChatMessages, buildChatSystemPrompt, buildSystemPrompt, buildUserMessage } from "../../shared/promptBuilder";
-import { INSPECT_CHILDREN_DESCRIPTION } from "../../shared/tools";
-import { MAX_TOOL_ROUNDS } from "../../shared/protocol";
+import {
+  INSPECT_CHILDREN_DESCRIPTION,
+  INSPECT_CHILDREN_NAME,
+  INSPECT_CHILDREN_PARAMETERS,
+  MAX_TOOL_ROUNDS,
+} from "../../shared/wire";
 import { inspectChildren } from "../../context/inspectChildren";
 import type { PuterChatMessage } from "./puterTypes";
 
@@ -19,9 +23,9 @@ const MAX_TOOL_STEPS = MAX_TOOL_ROUNDS + 1;
 const inspectChildrenTool = {
   type: "function" as const,
   function: {
-    name: "inspect_children",
+    name: INSPECT_CHILDREN_NAME,
     description: INSPECT_CHILDREN_DESCRIPTION,
-    parameters: { type: "object", properties: {}, additionalProperties: false },
+    parameters: INSPECT_CHILDREN_PARAMETERS,
   },
 };
 
@@ -35,14 +39,7 @@ const inspectChildrenTool = {
  * See README's Puter connector section for setup and the tradeoffs.
  */
 export class PuterConnector implements AgentConnector {
-  constructor(private readonly config: PuterConnectorConfig) {
-    if (typeof window === "undefined" || !window.puter?.ai) {
-      throw new Error(
-        '[clicksplain] "puter" connector requires Puter.js to be loaded first: add ' +
-          '<script src="https://js.puter.com/v2/"></script> before the clicksplain script tag.'
-      );
-    }
-  }
+  constructor(private readonly config: PuterConnectorConfig) {}
 
   async *explain(element: Element, req: ExplainRequest, signal: AbortSignal): AsyncIterable<string> {
     const messages: PuterChatMessage[] = [
@@ -76,32 +73,42 @@ export class PuterConnector implements AgentConnector {
     for (let step = 0; step < MAX_TOOL_STEPS; step++) {
       if (signal.aborted) return;
 
-      const stream = await window.puter!.ai.chat(messages, false, {
-        model,
-        stream: true,
-        // Force text-only on the final allowed step, mirroring the server
-        // handler's own toolChoice:"none" once MAX_TOOL_ROUNDS is reached.
-        tools: step < MAX_TOOL_STEPS - 1 ? [inspectChildrenTool] : undefined,
+      const puter = await waitForPuter(signal);
+      const stream = await untilAborted(
+        puter.ai.chat(messages, false, {
+          model,
+          stream: true,
+          // Force text-only on the final allowed step, mirroring the server
+          // handler's own toolChoice:"none" once MAX_TOOL_ROUNDS is reached.
+          tools: step < MAX_TOOL_STEPS - 1 ? [inspectChildrenTool] : undefined,
+        }),
+        signal
+      ).catch((err: unknown) => {
+        throw toError(err);
       });
 
       let pendingToolCall: { id: string; input: Record<string, unknown> } | null = null;
       // Same "let me check..." / blank-line / real-answer separation used by
       // every other connector: see ByokConnector.ts's textDeltasOrThrow.
       let isFirstChunkOfStep = step > 0;
-      for await (const part of stream) {
-        if (signal.aborted) return;
-        if (part.type === "text") {
-          if (isFirstChunkOfStep) {
-            isFirstChunkOfStep = false;
-            yield `\n\n${part.text}`;
-          } else {
-            yield part.text;
+      try {
+        for await (const part of stream) {
+          if (signal.aborted) return;
+          if (part.type === "text") {
+            if (isFirstChunkOfStep) {
+              isFirstChunkOfStep = false;
+              yield `\n\n${part.text}`;
+            } else {
+              yield part.text;
+            }
+          } else if (part.type === "tool_use") {
+            pendingToolCall = { id: part.id, input: part.input };
+          } else if (part.type === "error") {
+            throw new Error(part.message);
           }
-        } else if (part.type === "tool_use") {
-          pendingToolCall = { id: part.id, input: part.input };
-        } else if (part.type === "error") {
-          throw new Error(part.message);
         }
+      } catch (err) {
+        throw toError(err);
       }
 
       if (!pendingToolCall) return;
@@ -119,6 +126,49 @@ export class PuterConnector implements AgentConnector {
       );
     }
   }
+}
+
+const PUTER_LOAD_TIMEOUT_MS = 10_000;
+
+// Pages often load Puter.js with async/defer, so it may not exist yet when the
+// first pick happens: wait briefly rather than failing outright.
+async function waitForPuter(signal: AbortSignal): Promise<NonNullable<Window["puter"]>> {
+  const deadline = Date.now() + PUTER_LOAD_TIMEOUT_MS;
+  while (!window.puter?.ai) {
+    if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+    if (Date.now() > deadline) {
+      throw new Error(
+        '[clicksplain] "puter" connector requires Puter.js: add ' +
+          '<script src="https://js.puter.com/v2/"></script> to the page.'
+      );
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  return window.puter;
+}
+
+// puter.ai.chat() takes no AbortSignal, and while its sign-in popup is open the
+// promise may never settle: stop waiting on abort so a closed popover or a new
+// pick doesn't leave this generator suspended forever.
+function untilAborted<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = () => reject(new DOMException("Aborted", "AbortError"));
+    if (signal.aborted) return onAbort();
+    signal.addEventListener("abort", onAbort, { once: true });
+    promise.then(resolve, reject).finally(() => signal.removeEventListener("abort", onAbort));
+  });
+}
+
+// Puter rejects with plain objects (e.g. {error: {message}}), not Errors, so
+// without this the user would only ever see the generic fallback message.
+function toError(err: unknown): Error {
+  if (err instanceof Error) return err;
+  if (typeof err === "object" && err !== null) {
+    const record = err as { message?: unknown; error?: { message?: unknown } };
+    const message = record.message ?? record.error?.message;
+    if (typeof message === "string" && message) return new Error(message);
+  }
+  return new Error("Puter request failed. Please try again.");
 }
 
 // buildChatMessages's return type also covers the (never-populated, for this

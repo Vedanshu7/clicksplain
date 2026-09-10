@@ -1,13 +1,16 @@
-import { streamText, tool } from "ai";
+import { jsonSchema, streamText, tool } from "ai";
 import {
   buildChatMessages,
   buildChatSystemPrompt,
   buildExplainMessages,
   buildSystemPrompt,
 } from "../shared/promptBuilder";
-import { MAX_TOOL_ROUNDS, parseRequestBody, type ChatRequestBody, type ExplainRequestBody } from "../shared/protocol";
+import { parseRequestBody, type ChatRequestBody, type ExplainRequestBody } from "../shared/protocol";
 import { createModel, MAX_TOKENS, type Provider } from "../shared/gateway";
-import { INSPECT_CHILDREN_DESCRIPTION, inspectChildrenInputSchema } from "../shared/tools";
+import { INSPECT_CHILDREN_DESCRIPTION, INSPECT_CHILDREN_PARAMETERS, MAX_TOOL_ROUNDS } from "../shared/wire";
+
+const DEFAULT_MAX_BODY_BYTES = 64 * 1024;
+const GENERIC_ERROR = "Something went wrong generating a response. Please try again.";
 
 export interface ClicksplainHandlerConfig {
   /** Key for whichever provider `provider` selects: only one provider is ever active at a time. */
@@ -17,15 +20,29 @@ export interface ClicksplainHandlerConfig {
   /** Independently configurable from `model`: falls back to it if unset. */
   chatModel?: string;
   /**
-   * Shared secret the client must send as x-widget-token. Optional: unset means
-   * this endpoint accepts unauthenticated requests from anyone who finds the URL
-   * (fine for local testing, not for production). Note allowedOrigin/CORS does
-   * NOT provide this protection: CORS only restricts which origins a *browser*
-   * will let JS read the response from, it does nothing to stop curl/scripts
-   * from calling this endpoint directly.
+   * Shared secret the client must send as x-widget-token. It ships inside your
+   * page, so it is not a secret from anyone who opens DevTools: it only stops
+   * scripts that crawl for open, tokenless endpoints. Pair it with
+   * `allowedOrigins` and an `onRequest` rate limit for real protection.
    */
   widgetToken?: string;
-  allowedOrigin?: string;
+  /**
+   * Exact origins (e.g. "https://app.example.com") allowed to call this
+   * endpoint; anything else gets a 403, including requests with no Origin
+   * header. Browsers can't forge Origin, so this stops other websites from
+   * spending your key through their visitors; it does not stop a script that
+   * sets the header by hand (that's what `onRequest` rate limiting is for).
+   * Unset allows every origin: fine for local testing, not for production.
+   */
+  allowedOrigins?: string[];
+  /**
+   * Runs after the origin and token checks, before the body is read. Return a
+   * Response (e.g. a 429 from your rate limiter or budget check) to reject the
+   * request; return nothing to let it through.
+   */
+  onRequest?: (request: Request) => Response | void | Promise<Response | void>;
+  /** Requests with a larger body get a 413. Default 64 KiB. */
+  maxBodyBytes?: number;
   /** portkey only: base URL of the adopter's self-hosted Portkey AI Gateway. */
   portkeyGatewayUrl?: string;
   /** portkey only: which underlying provider Portkey should route this request to. */
@@ -39,7 +56,7 @@ export interface ClicksplainHandlerConfig {
 // result in `toolExchange` to resume the conversation.
 const inspectChildrenTool = tool({
   description: INSPECT_CHILDREN_DESCRIPTION,
-  inputSchema: inspectChildrenInputSchema,
+  inputSchema: jsonSchema<Record<string, never>>(INSPECT_CHILDREN_PARAMETERS),
 });
 
 /**
@@ -56,46 +73,48 @@ const inspectChildrenTool = tool({
  * caller's responsibility, keeping this function itself 100% portable.
  */
 export function createClicksplainHandler(config: ClicksplainHandlerConfig): (request: Request) => Promise<Response> {
-  const allowedOrigin = config.allowedOrigin ?? "*";
+  const maxBodyBytes = config.maxBodyBytes ?? DEFAULT_MAX_BODY_BYTES;
+  warnAboutOpenEndpoint(config);
 
   return async (request: Request): Promise<Response> => {
+    const origin = request.headers.get("origin");
+    const allowOrigin = resolveAllowedOrigin(origin, config.allowedOrigins);
+    if (allowOrigin === null) {
+      return jsonError("Origin not allowed", 403, null);
+    }
+
     if (request.method === "OPTIONS") {
-      return new Response(null, { headers: corsHeaders(allowedOrigin) });
+      return new Response(null, { status: 204, headers: corsHeaders(allowOrigin) });
     }
 
     if (request.method !== "POST") {
-      return jsonError("Method not allowed", 405, allowedOrigin);
+      return jsonError("Method not allowed", 405, allowOrigin);
     }
 
-    if (config.widgetToken) {
-      if (request.headers.get("x-widget-token") !== config.widgetToken) {
-        return jsonError("Unauthorized", 401, allowedOrigin);
-      }
-    } else {
-      console.warn(
-        "[clicksplain] widgetToken is not set: this endpoint accepts unauthenticated " +
-          "requests from anyone who finds the URL. Fine for local testing; set widgetToken " +
-          "before deploying to production."
-      );
+    if (!config.apiKey) {
+      console.error("[clicksplain] apiKey is not set");
+      return jsonError("Server misconfigured", 500, allowOrigin);
     }
 
-    let rawBody: unknown;
-    try {
-      rawBody = await request.json();
-    } catch {
-      return jsonError("Invalid JSON body", 400, allowedOrigin);
+    if (config.widgetToken && !timingSafeEqual(request.headers.get("x-widget-token") ?? "", config.widgetToken)) {
+      return jsonError("Unauthorized", 401, allowOrigin);
     }
 
-    const parsed = parseRequestBody(rawBody);
+    if (config.onRequest) {
+      const rejection = await config.onRequest(request);
+      if (rejection) return withCors(rejection, allowOrigin);
+    }
+
+    const read = await readJsonBody(request, maxBodyBytes);
+    if (!read.ok) {
+      return jsonError(read.message, read.status, allowOrigin);
+    }
+
+    const parsed = parseRequestBody(read.value);
     if (!parsed.ok) {
-      return jsonError(parsed.message, 400, allowedOrigin);
+      return jsonError(parsed.message, 400, allowOrigin);
     }
     const body = parsed.body;
-
-    const provider: Provider = config.provider ?? "anthropic";
-    if (!config.apiKey) {
-      return jsonError("Server misconfigured: apiKey not set", 500, allowedOrigin);
-    }
 
     const isChat = body.mode === "chat";
     const systemPrompt = isChat ? buildChatSystemPrompt() : buildSystemPrompt();
@@ -107,13 +126,20 @@ export function createClicksplainHandler(config: ClicksplainHandlerConfig): (req
 
     let model;
     try {
-      model = createModel(provider, modelId, config.apiKey, {
+      model = createModel(config.provider ?? "anthropic", modelId, config.apiKey, {
         portkeyGatewayUrl: config.portkeyGatewayUrl,
         portkeyProvider: config.portkeyProvider,
       });
     } catch (err) {
-      return jsonError(err instanceof Error ? err.message : "model configuration error", 500, allowedOrigin);
+      console.error("[clicksplain] model configuration error:", describeError(err));
+      return jsonError("Server misconfigured", 500, allowOrigin);
     }
+
+    // Aborted when the client disconnects (request.signal) or stops reading
+    // (the response stream's cancel), so a closed tab stops the upstream LLM
+    // call instead of letting it run, and bill, to completion.
+    const upstream = new AbortController();
+    request.signal?.addEventListener("abort", () => upstream.abort(), { once: true });
 
     const result = streamText({
       model,
@@ -122,31 +148,119 @@ export function createClicksplainHandler(config: ClicksplainHandlerConfig): (req
       tools: { inspect_children: inspectChildrenTool },
       toolChoice: roundsUsed >= MAX_TOOL_ROUNDS ? "none" : undefined,
       maxOutputTokens: MAX_TOKENS,
+      abortSignal: upstream.signal,
+      // The SDK's default onError console.errors the raw error object; the same
+      // error also arrives as a stream part, where describeError() logs it.
+      onError: () => {},
     });
 
-    return new Response(translateAiSdkStream(result), {
+    return new Response(translateAiSdkStream(result, upstream), {
       headers: {
         "content-type": "text/event-stream",
         "cache-control": "no-cache",
-        ...corsHeaders(allowedOrigin),
+        ...corsHeaders(allowOrigin),
       },
     });
   };
 }
 
-function corsHeaders(allowedOrigin: string): HeadersInit {
+function warnAboutOpenEndpoint(config: ClicksplainHandlerConfig): void {
+  const missing = [
+    !config.allowedOrigins && "allowedOrigins",
+    !config.widgetToken && "widgetToken",
+    !config.onRequest && "onRequest (rate limiting)",
+  ].filter(Boolean);
+  if (missing.length === 0) return;
+  console.warn(
+    `[clicksplain] handler created without ${missing.join(", ")}: anyone who finds this ` +
+      "endpoint can spend your LLM key. Fine for local testing; set these before deploying."
+  );
+}
+
+/** The value for Access-Control-Allow-Origin, or null when the request must be rejected. */
+function resolveAllowedOrigin(origin: string | null, allowedOrigins: string[] | undefined): string | null {
+  if (!allowedOrigins) return "*";
+  if (origin && allowedOrigins.includes(origin)) return origin;
+  return null;
+}
+
+function corsHeaders(allowOrigin: string | null): Record<string, string> {
+  if (allowOrigin === null) return {};
   return {
-    "access-control-allow-origin": allowedOrigin,
+    "access-control-allow-origin": allowOrigin,
     "access-control-allow-methods": "POST, OPTIONS",
     "access-control-allow-headers": "content-type, x-widget-token",
+    ...(allowOrigin === "*" ? {} : { vary: "Origin" }),
   };
 }
 
-function jsonError(message: string, status: number, allowedOrigin: string): Response {
+function withCors(response: Response, allowOrigin: string): Response {
+  const headers = new Headers(response.headers);
+  for (const [name, value] of Object.entries(corsHeaders(allowOrigin))) headers.set(name, value);
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+}
+
+function jsonError(message: string, status: number, allowOrigin: string | null): Response {
   return new Response(JSON.stringify({ type: "error", message }), {
     status,
-    headers: { "content-type": "application/json", ...corsHeaders(allowedOrigin) },
+    headers: { "content-type": "application/json", ...corsHeaders(allowOrigin) },
   });
+}
+
+// Content-Length alone can't be trusted (chunked bodies have none, and a client
+// can lie), so the cap is enforced on the bytes actually read: an oversized body
+// is rejected without ever being fully buffered.
+async function readJsonBody(
+  request: Request,
+  maxBytes: number
+): Promise<{ ok: true; value: unknown } | { ok: false; status: number; message: string }> {
+  const declared = Number(request.headers.get("content-length"));
+  if (declared > maxBytes) return { ok: false, status: 413, message: "Request body too large" };
+  if (!request.body) return { ok: false, status: 400, message: "Invalid JSON body" };
+
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel();
+      return { ok: false, status: 413, message: "Request body too large" };
+    }
+    chunks.push(value);
+  }
+
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+
+  try {
+    return { ok: true, value: JSON.parse(new TextDecoder().decode(bytes)) };
+  } catch {
+    return { ok: false, status: 400, message: "Invalid JSON body" };
+  }
+}
+
+// Length is not hidden (the token's length isn't the secret part), but the
+// comparison time no longer depends on how many leading characters match.
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+// Raw AI SDK errors carry requestBodyValues and responseBody (the user's page
+// content and the provider's raw reply), which don't belong in server logs.
+function describeError(err: unknown): string {
+  if (!(err instanceof Error)) return String(err);
+  const status = (err as { statusCode?: unknown }).statusCode;
+  return `${err.name}: ${err.message}${typeof status === "number" ? ` (status ${status})` : ""}`;
 }
 
 // Reshapes the AI SDK's stream into the canonical {"type":"delta"|"done"|"error"|"tool-call"}
@@ -164,56 +278,54 @@ function jsonError(message: string, status: number, allowedOrigin: string): Resp
 // Error messages sent to the client are always a fixed generic string, never the
 // raw provider/SDK error: that upstream text can include internal details (exact
 // model id, provider-side rate-limit/account text) that aren't meant for whoever is
-// calling this endpoint, which (since widgetToken is the only gate) may not
-// always be the real widget. The real error is still logged server-side.
-function translateAiSdkStream(result: {
-  stream: AsyncIterable<{
-    type: string;
-    text?: string;
-    error?: unknown;
-    toolCallId?: string;
-    toolName?: string;
-    input?: unknown;
-  }>;
-}): ReadableStream<Uint8Array> {
+// calling this endpoint. The real error is still logged server-side.
+function translateAiSdkStream(
+  result: {
+    stream: AsyncIterable<{
+      type: string;
+      text?: string;
+      error?: unknown;
+      toolCallId?: string;
+      toolName?: string;
+      input?: unknown;
+    }>;
+  },
+  upstream: AbortController
+): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();
-  const GENERIC_ERROR = "Something went wrong generating a response. Please try again.";
+  let cancelled = false;
 
   return new ReadableStream({
     async start(controller) {
+      const send = (payload: unknown) => {
+        if (!cancelled) controller.enqueue(encoder.encode(`data: ${JSON.stringify(payload)}\n\n`));
+      };
       try {
         for await (const part of result.stream) {
+          if (cancelled) return;
           if (part.type === "text-delta") {
-            controller.enqueue(encoder.encode(sseLine({ type: "delta", text: part.text })));
+            send({ type: "delta", text: part.text });
           } else if (part.type === "tool-call") {
-            controller.enqueue(
-              encoder.encode(
-                sseLine({
-                  type: "tool-call",
-                  toolCallId: part.toolCallId,
-                  toolName: part.toolName,
-                  input: part.input,
-                })
-              )
-            );
-            return; // `finally` below closes the controller exactly once.
+            send({ type: "tool-call", toolCallId: part.toolCallId, toolName: part.toolName, input: part.input });
+            return;
           } else if (part.type === "error") {
-            console.error("[clicksplain] stream error:", part.error);
-            controller.enqueue(encoder.encode(sseLine({ type: "error", message: GENERIC_ERROR })));
+            console.error("[clicksplain] stream error:", describeError(part.error));
+            send({ type: "error", message: GENERIC_ERROR });
             return;
           }
         }
-        controller.enqueue(encoder.encode(sseLine({ type: "done" })));
+        send({ type: "done" });
       } catch (err) {
-        console.error("[clicksplain] stream failed:", err);
-        controller.enqueue(encoder.encode(sseLine({ type: "error", message: GENERIC_ERROR })));
+        if (cancelled) return;
+        console.error("[clicksplain] stream failed:", describeError(err));
+        send({ type: "error", message: GENERIC_ERROR });
       } finally {
-        controller.close();
+        if (!cancelled) controller.close();
       }
     },
+    cancel() {
+      cancelled = true;
+      upstream.abort();
+    },
   });
-}
-
-function sseLine(payload: unknown): string {
-  return `data: ${JSON.stringify(payload)}\n\n`;
 }

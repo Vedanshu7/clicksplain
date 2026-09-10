@@ -7,7 +7,7 @@ canonical streaming protocol the client library expects. You deploy and own
 this; nothing here talks to any service run by clicksplain itself.
 
 No framework: plain `node:http`, to keep the example runnable anywhere Node
-runs. `src/server.ts` is ~15 lines: `createClicksplainHandler` from
+runs. `src/server.ts` is `createClicksplainHandler` from
 `clicksplain/server` wrapped in `toNodeHandler` from
 `clicksplain/server/node` and handed to `http.createServer`. All the actual
 request handling (validation, auth, prompt building, streaming) lives in the
@@ -16,13 +16,21 @@ Cloudflare Workers, Vercel Edge, or any other Fetch-API runtime, mounting
 `createClicksplainHandler` directly with zero adapter code there. The same
 `toNodeHandler` adapter works for Express or any other Node-callback-style
 server too: swap `http.createServer(toNodeHandler(handler))` for
-`app.post("/", toNodeHandler(handler))`-style wiring.
+`app.post("/", toNodeHandler(handler))`-style wiring. The only other code in
+it is a small in-memory rate limiter passed as `onRequest` (see Security).
 
 ## Setup
 
+Requires Node 22 or later. This example installs the package from the repo
+root (`"clicksplain": "file:../.."`), so build that first:
+
 ```bash
+(cd ../.. && npm install && npm run build)
 npm install
 ```
+
+Copying this example out of the repo? Replace `file:../..` with a real
+version (`npm install clicksplain`).
 
 ### Provider config
 
@@ -42,10 +50,10 @@ gateway's base URL, e.g. `http://localhost:8787/v1` for `npx
 @portkey-ai/gateway` run locally) and `PORTKEY_PROVIDER` (which underlying
 provider Portkey should route to, e.g. `"anthropic"`). `API_KEY` still holds
 that underlying provider's own real key: Portkey's self-hosted gateway
-forwards it, it doesn't require a Portkey account of its own. This is a
-different trust model from BYOK/direct providers only in that requests pass
-through one more hop (your own self-hosted gateway) before reaching the
-provider.
+forwards it, it doesn't require a Portkey account of its own. That means the
+gateway sees your key on every request, so `PORTKEY_GATEWAY_URL` must be
+`https://` unless it's on localhost (the handler refuses a plain-http remote
+gateway), and it should be a gateway you run yourself.
 
 ### Local key
 
@@ -66,20 +74,29 @@ mechanism here, it's plain `process.env`.
 
 ## Security: read before deploying to production
 
-This endpoint holds a real, billable LLM API key. Two things you need before
-going live:
+This endpoint holds a real, billable LLM API key. The key itself never leaves
+the server: the widget only ever talks to this endpoint, error responses are
+always a fixed generic message, and logs carry only the error's name, status
+and message. What needs protecting is the endpoint, because anyone who can
+call it can spend your key. Its URL is not a secret (it ships in your page),
+so set up all three of these:
 
-**`ALLOWED_ORIGIN` is CORS, not access control.** CORS is enforced by
-*browsers*: it stops a browser from letting JS on a disallowed origin read
-the response. It does **not** stop `curl`, a script, or any non-browser client
-from calling this endpoint directly and getting billed. The endpoint URL also
-isn't a secret: it ships verbatim in your site's client-side bundle
-(`Clicksplain.init({ endpoint: "..." })`), visible to anyone via view-source.
-Still set `ALLOWED_ORIGIN` to your real site's origin before deploying (it's
-a real, if partial, restriction), but don't treat it as the security boundary.
+**`ALLOWED_ORIGINS`: which websites may call it.** Comma-separated exact
+origins (`https://app.example.com`). Any other origin, or a request with no
+`Origin` header, gets `403`. Browsers can't fake `Origin`, so this stops
+other websites from spending your key through their visitors. It does not
+stop a script that sets the header by hand, which is what the rate limit is
+for. Unset allows every origin, which is only fine locally.
 
-**Set `WIDGET_TOKEN`, the actual access control**, as a real environment
-variable, then pass the same value on the client:
+**A rate limit (`onRequest`).** `src/server.ts` passes a small fixed-window,
+per-IP limiter (`RATE_LIMIT_PER_MINUTE`, default 20) as `onRequest`; anything
+it returns (here a `429`) is sent instead of calling the model. It keeps
+counts in memory, so it only works for a single process: behind a load
+balancer or on serverless, back it with a shared store (Redis, Upstash, your
+platform's rate limiting) or use a limit at your proxy/CDN instead.
+
+**`WIDGET_TOKEN`: a speed bump, not a secret.** Set it here and pass the same
+value to the widget:
 
 ```js
 Clicksplain.init({
@@ -89,33 +106,25 @@ Clicksplain.init({
 });
 ```
 
-The proxy rejects any request missing a matching `x-widget-token` header with
-`401`. This is defense-in-depth, not a cryptographic guarantee: the token is
-visible in your site's client bundle to a sufficiently determined attacker,
-same as any client-embedded credential, but it stops the realistic threat
-here (scripts crawling for open, unauthenticated proxy endpoints). Left
-optional so local development keeps working with zero config; if unset, the
-server logs a warning on every request reminding you it's open.
+Requests without a matching `x-widget-token` header get `401`. The token is
+in your page, so anyone who opens DevTools can read it; it only stops scripts
+that crawl for open, tokenless endpoints. If any of these three are unset,
+the server logs one warning at startup.
 
-**Rate limiting is not built in.** Even with `WIDGET_TOKEN` set, someone who
-obtains the token (or an authenticated-but-malicious caller) could still send
-requests in volume. Put a real rate limiter (your hosting platform's, or a
-reverse proxy in front of this) in production; dashboard-configured limits
-are easier to tune than code you'd have to redeploy.
+**Cost per request is capped regardless:** answers are limited to 400 output
+tokens, request bodies to 64 KiB (`413` beyond that), every text field has a
+length cap, and at most one tool round-trip is allowed per question.
 
-**Known residual limitation:** the DOM-reasoning-loop's `toolExchange` field
-(see below) is client-supplied and only size/shape-validated, not
-cryptographically tied to a real prior tool call; an authenticated caller
-could still fabricate its contents. Full protection would require server-side
-session state, which this stateless handler deliberately doesn't keep. In
-practice the LLM's own output is only ever rendered as plain text on the
-client (never HTML), so the impact of this is cost/content-policy risk, not
-code execution.
+**Client-supplied tool results:** the DOM reasoning loop (see below) has the
+client send back what it found, and this stateless handler can't prove that
+came from a real tool call. It's validated as exactly the same element-info
+shape as `elementInfo`, so a forged one is no more powerful than forging
+`elementInfo` itself; model output is only ever rendered as plain text.
 
 **Pre-deploy checklist:**
-- [ ] `ALLOWED_ORIGIN` set to your real origin, not `*`
+- [ ] `ALLOWED_ORIGINS` set to your real site's origin(s)
+- [ ] A rate limit that works for how you deploy (the in-memory one is single-process only)
 - [ ] `WIDGET_TOKEN` set, and the same value passed to `Clicksplain.init()`
-- [ ] A real rate limiter in front of this in production
 
 ## Local development
 
@@ -142,7 +151,8 @@ POST /
 Content-Type: application/json
 
 // mode: "explain" (mode may also be omitted, defaults to "explain"); uses MODEL
-{ "mode": "explain", "elementInfo": {...}, "docsContext": "...", "route": "/dashboard" }
+// pageLanguage is optional: the page's <html lang>, so the answer uses that language
+{ "mode": "explain", "elementInfo": {...}, "docsContext": "...", "route": "/dashboard", "pageLanguage": "en" }
 
 // mode: "chat": a follow-up question in an existing popover thread, uses CHAT_MODEL
 {
@@ -167,7 +177,8 @@ or on failure: `data: {"type":"error","message":"..."}`.
 Every field is validated server-side (`clicksplain`'s `src/shared/protocol.ts`
 zod schema): missing/wrong-typed fields, or free-text fields exceeding a
 generous size cap, get a clean `400 {"type":"error","message":"Invalid
-request: ..."}` instead of an unhandled crash. Error messages returned to the
+request: ..."}` instead of an unhandled crash. If the client disconnects
+mid-answer, the call to the model is aborted. Error messages returned to the
 client are always a fixed generic string (the real error is logged
 server-side), so they never leak upstream provider details (model ids,
 account-level restriction text) to whoever is calling the endpoint.
@@ -197,7 +208,7 @@ the *original* request body plus a `toolExchange` array carrying the result:
 ```
 
 At most one such round-trip is allowed per request (`MAX_TOOL_ROUNDS` in
-`clicksplain`'s `src/shared/protocol.ts`, enforced both by the schema, which
+`clicksplain`'s `src/shared/wire.ts`, enforced both by the schema, which
 rejects a `toolExchange` array longer than this with `400`, and by forcing a
 text-only finish once one entry is already present) so a click can never turn
 into an unbounded loop, even from a request that bypasses the real widget
