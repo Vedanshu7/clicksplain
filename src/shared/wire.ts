@@ -24,6 +24,11 @@ export interface ToolExchangeEntry {
   toolName: "inspect_children";
   input: Record<string, never>;
   result: ElementInfo[];
+  /**
+   * What the model already said before asking to look inside ("Let me
+   * check..."). Replayed so the resumed answer doesn't say it again.
+   */
+  preamble?: string;
 }
 
 // At most one inspect_children round-trip per explain/chat call, shared by every

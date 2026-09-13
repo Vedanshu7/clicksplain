@@ -14,7 +14,10 @@ First npm release.
 - `data-clicksplain-ignore` and `data-clicksplain-redact` let adopters keep regions out of explanations or out of the prompt.
 - Answers come back in the page's `<html lang>` language.
 - An element with no text of its own no longer borrows the text of a neighboring button or link as its description (a form next to an "Export report" button was being explained as an export form).
-- New options: `timeoutMs`, `position`, `labels`.
+- New options: `siteContext` (what your site is, so jargon is explained in the right domain), `timeoutMs`, `position`, `labels`.
+- Clicking a field's label explains the field it labels; inputs are described by their real role (slider, checkbox, button) instead of always "text box".
+- Text right beside an element (a label before it, a hint or status after it, such as "Descale due in 12 shots") and a dropdown's choices now reach the model.
+- After looking inside a container, the answer no longer repeats its "Let me check..." opener.
 - Works under a strict Content-Security-Policy (no `'unsafe-inline'` styles needed).
 - Accessibility: focus moves into the popover and back, visible focus rings, quieter screen reader announcements, larger close target.
 
@@ -26,3 +29,8 @@ First npm release.
 - Logs never include the raw provider error object (page content, provider response).
 - `toNodeHandler` streams the request body, honors backpressure, and no longer crashes the process on a mid-stream error.
 - Portkey gateway URLs must be `https://` unless on localhost.
+- `systemPrompts` option to replace the built-in instructions (e.g. your product's voice).
+
+### Quality
+
+- `evals/`: 41 cases run through the real widget and server against the live model, graded by code checks and a Claude judge; `evals/gepa.ts` optimizes the explanation prompt (GEPA-style reflective search) on a train/validation/test split.

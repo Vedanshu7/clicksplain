@@ -35,6 +35,12 @@ export interface InitConfig {
   /** puter: independently configurable from `model`: falls back to it if unset. */
   chatModel?: string;
   /**
+   * A sentence or two about what your site is (e.g. "Crema, the app for a
+   * home espresso machine"), sent with every question so domain jargon is
+   * explained in the right sense.
+   */
+  siteContext?: string;
+  /**
    * Longest wait for the next chunk of an answer before giving up with an
    * error. Default 30s, or 120s for puter, whose first answer can wait on its
    * own sign-in popup.
@@ -75,6 +81,7 @@ class ClicksplainInstance {
   private readonly docsConfig?: DocsConfig;
   private readonly cache: ExplanationCache;
   private readonly labels: Labels;
+  private readonly siteContext: string | null;
   private readonly unsubscribePick: () => void;
   private currentPick: CurrentPick | null = null;
 
@@ -89,6 +96,7 @@ class ClicksplainInstance {
       this.labels.timeout
     );
     this.docsConfig = config.docsConfig;
+    this.siteContext = config.siteContext ?? null;
     this.cache = new ExplanationCache(config.cache);
     // Applied before Picker/Popover construct their own elements, so nothing
     // ever renders with default colors and then flashes to the themed ones.
@@ -135,6 +143,7 @@ class ClicksplainInstance {
       elementInfo,
       route,
       pageLanguage,
+      siteContext: this.siteContext,
       docsConfig: this.docsConfig,
       cache: this.cache,
       connector: this.connector,
@@ -165,7 +174,16 @@ class ClicksplainInstance {
     const signal = this.session.beginChatTurn();
     this.chatSession.addUserTurn(question);
 
-    const request: ChatRequest = { elementInfo, route, pageLanguage, docsContext, baseExplanation, history, question };
+    const request: ChatRequest = {
+      elementInfo,
+      route,
+      pageLanguage,
+      siteContext: this.siteContext,
+      docsContext,
+      baseExplanation,
+      history,
+      question,
+    };
 
     try {
       let fullText = "";
@@ -242,6 +260,7 @@ function readConfigFromScriptTag(): InitConfig | null {
     token: script.dataset.token,
     model: script.dataset.model,
     chatModel: script.dataset.chatModel,
+    siteContext: script.dataset.siteContext,
     position,
   };
 }

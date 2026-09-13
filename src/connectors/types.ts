@@ -7,6 +7,8 @@ export interface ExplainRequest {
   route: string;
   /** The page's `<html lang>`, so the answer comes back in the page's language. */
   pageLanguage: string | null;
+  /** InitConfig.siteContext: what the site is, so jargon is explained in the right domain. */
+  siteContext: string | null;
   /** Accumulated tool round-trips already resolved for this request (byo-endpoint only). */
   toolExchange?: ToolExchangeEntry[];
 }
@@ -16,6 +18,7 @@ export interface ChatRequest {
   docsContext: string | null;
   route: string;
   pageLanguage: string | null;
+  siteContext: string | null;
   baseExplanation: string;
   history: ChatTurn[];
   question: string;

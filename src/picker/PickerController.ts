@@ -90,6 +90,9 @@ export class PickerController {
     // Browser page translation (Chrome, Google Translate) wraps every text run
     // in <font> elements; the visitor clicked the control, not the wrapper.
     while (target?.tagName === "FONT" && target.parentElement) target = target.parentElement;
+    // Clicking a field's label means "what is this setting?": explain the
+    // control it labels, not the label element itself.
+    if (target instanceof HTMLLabelElement && target.control) return target.control;
     return target;
   }
 

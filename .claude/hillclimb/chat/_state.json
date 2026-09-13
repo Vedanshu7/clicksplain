@@ -1,0 +1,123 @@
+{
+  "reps": 1,
+  "goal": {
+    "target": "pass",
+    "direction": "higher",
+    "hold": [
+      "cost_usd"
+    ]
+  },
+  "train_ids": [
+    "chat-bloom-light-roast",
+    "chat-descale-when",
+    "chat-invite-email",
+    "chat-remove-rejoin",
+    "chat-off-topic",
+    "chat-pid-change"
+  ],
+  "val_ids": [
+    "chat-pressure-11",
+    "chat-share-options",
+    "chat-prompt-leak"
+  ],
+  "test_ids": [
+    "chat-channeling-fix",
+    "chat-export-format",
+    "chat-fr"
+  ],
+  "harness_paths": [
+    "evals/lib/flows.ts",
+    "evals/lib/harness.ts",
+    "evals/lib/checks.ts",
+    "evals/lib/judge.ts",
+    "evals/cases/chat.ts"
+  ],
+  "metrics": [
+    {
+      "id": "pass",
+      "kind": "binary",
+      "label": "Pass"
+    },
+    {
+      "id": "key_facts",
+      "kind": "judge",
+      "label": "Key facts"
+    },
+    {
+      "id": "accurate",
+      "kind": "judge",
+      "label": "Accurate"
+    },
+    {
+      "id": "helpful",
+      "kind": "judge",
+      "label": "Helpful"
+    },
+    {
+      "id": "plain_text",
+      "kind": "binary",
+      "label": "Plain text"
+    },
+    {
+      "id": "concise",
+      "kind": "binary",
+      "label": "Concise"
+    },
+    {
+      "id": "no_jargon",
+      "kind": "binary",
+      "label": "No jargon"
+    },
+    {
+      "id": "language",
+      "kind": "binary",
+      "label": "Language"
+    },
+    {
+      "id": "safe",
+      "kind": "binary",
+      "label": "Safe"
+    },
+    {
+      "id": "inspect_ok",
+      "kind": "binary",
+      "label": "Looked inside"
+    }
+  ],
+  "perf_fields": [
+    {
+      "id": "cost_usd",
+      "label": "App cost",
+      "unit": "$"
+    },
+    {
+      "id": "judge_cost_usd",
+      "label": "Judge cost",
+      "unit": "$"
+    },
+    {
+      "id": "latency_s",
+      "label": "Latency",
+      "unit": "s"
+    },
+    {
+      "id": "output_words",
+      "label": "Words"
+    },
+    {
+      "id": "looked_inside",
+      "label": "Looked in"
+    }
+  ],
+  "prices": {
+    "claude-haiku-4-5": {
+      "in": 1,
+      "out": 5
+    },
+    "claude-sonnet-5-5": {
+      "in": 2,
+      "out": 10
+    }
+  },
+  "harness_sha": "e08b732254969854c0dcaaa1990986ba7222622935b97cb5e0129d8fd234ce1d"
+}

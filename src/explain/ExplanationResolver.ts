@@ -10,6 +10,7 @@ export interface ResolveExplanationInput {
   elementInfo: ElementInfo;
   route: string;
   pageLanguage: string | null;
+  siteContext: string | null;
   docsConfig: DocsConfig | undefined;
   cache: ExplanationCache;
   connector: AgentConnector;
@@ -32,7 +33,8 @@ export interface ResolvedExplanation {
 export async function resolveExplanation(
   input: ResolveExplanationInput
 ): Promise<ResolvedExplanation | null> {
-  const { element, elementInfo, route, pageLanguage, docsConfig, cache, connector, popover, labels, signal } = input;
+  const { element, elementInfo, route, pageLanguage, siteContext, docsConfig, cache, connector, popover, labels, signal } =
+    input;
 
   const docsContext = resolveDocsContext(elementInfo.agentId, docsConfig, route);
   if (docsContext) {
@@ -48,7 +50,7 @@ export async function resolveExplanation(
     return { baseExplanation: cached, docsContext: null };
   }
 
-  const request: ExplainRequest = { elementInfo, docsContext: null, route, pageLanguage };
+  const request: ExplainRequest = { elementInfo, docsContext: null, route, pageLanguage, siteContext };
 
   try {
     let fullText = "";

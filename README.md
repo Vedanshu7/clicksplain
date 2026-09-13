@@ -5,6 +5,8 @@
 
 A drop-in, AI-powered "explain this UI" widget. Click the "?" button, then click any element on the page to get an LLM-generated explanation of what it does, rendered in a popover anchored to the element, with follow-up questions.
 
+![Picking the Bloom slider in the Crema demo: the widget streams a plain-language explanation of what bloom does](docs/media/clicksplain-explain.gif)
+
 No hosted backend: you choose how the widget reaches a model.
 
 | Connector | Where the model call happens | Use it for |
@@ -12,6 +14,43 @@ No hosted backend: you choose how the widget reaches a model.
 | `byo-endpoint` | Your own server, using `clicksplain/server` | Production (recommended): the key never reaches the browser |
 | `puter` | The visitor's browser, through [Puter.js](https://docs.puter.com/) | Free, no key, no backend; usage is billed to each visitor's own Puter account, which asks them to sign in |
 | BYOK (`clicksplain/byok`) | The visitor's browser, with your raw key | Local development and internal tools only: the key is visible to every visitor |
+
+## See it work
+
+All recordings are the [`examples/demo-nextjs`](examples/demo-nextjs) app, Crema, a made-up espresso machine app full of jargon, answering live.
+
+| Hand-written answer, no model call | Follow-up question | Looking inside a container |
+|---|---|---|
+| ![Descale shows a hand-written explanation instantly](docs/media/clicksplain-instant.gif) | ![Asking "How often should I do it?" gets an answer that uses the page's own reminder](docs/media/clicksplain-followup.gif) | !["Let me check what's inside this section..." then an explanation of the share form](docs/media/clicksplain-look-inside.gif) |
+| Elements tagged with `data-agent-id` show your own text from `docsConfig` instantly. | Every explanation can be questioned further, with the conversation kept in context. | For a form, menu or list, the model asks the browser what's inside before answering. |
+
+## How it works
+
+```mermaid
+sequenceDiagram
+    actor V as Visitor
+    participant W as Widget (browser)
+    participant S as Your server<br/>(clicksplain/server)
+    participant C as Claude
+    V->>W: clicks "?" then an element
+    W->>W: read the element's role, label, nearby text<br/>(never input values or redacted regions)
+    W->>S: POST element details
+    S->>C: prompt + inspect_children tool
+    alt the element's own details are enough
+        C-->>S: streamed answer
+    else it's a container
+        C-->>S: "Let me check..." + tool call
+        S-->>W: tool-call frame
+        W->>W: read the element's direct children
+        W->>S: POST again with what was inside
+        S->>C: resume with the children
+        C-->>S: streamed answer
+    end
+    S-->>W: answer as server-sent events
+    W-->>V: popover, with follow-up questions
+```
+
+The API key only ever lives on your server. The widget never touches the page beyond reading it: no clicks, no form values, no navigation.
 
 ## Quick start (byo-endpoint)
 
@@ -85,6 +124,7 @@ itself: every config value is passed in explicitly, since some runtimes
 | `onRequest` | none | Runs before the body is read; return a `Response` to reject the request (rate limits, budgets, auth). |
 | `widgetToken` | none | Token the widget must send as `x-widget-token` (`401` otherwise). |
 | `maxBodyBytes` | 64 KiB | Larger request bodies get `413`. |
+| `systemPrompts` | built in | `{ explain?, chat? }` to replace the model instructions, e.g. for your product's voice. They replace the defaults entirely. |
 | `portkeyGatewayUrl` / `portkeyProvider` | none | Required for `provider: "portkey"`. The gateway receives your provider key, so it must be `https://` unless on localhost. |
 
 The full wire protocol is documented in `examples/proxy-node-http/README.md`.
@@ -150,6 +190,7 @@ Without a bundler, load `clicksplain-byok.global.js` instead of `clicksplain.glo
 | `connector` | `data-connector` | `"byo-endpoint"`, `"puter"`, or a connector object. |
 | `endpoint`, `token` | `data-endpoint`, `data-token` | byo-endpoint. |
 | `model`, `chatModel` | `data-model`, `data-chat-model` | puter. |
+| `siteContext` | `data-site-context` | A sentence about what your site is (e.g. "Crema, the app for a home espresso machine"), sent with every question so jargon is explained in the right sense. Recommended. |
 | `position` | `data-position` | `"bottom-right"` (default) or `"bottom-left"`. |
 | `timeoutMs` | | Longest wait for the next piece of an answer. Default 30 s (120 s for puter). |
 | `docsConfig` | | Hand-written explanations: see below. |
@@ -241,6 +282,37 @@ Clicksplain.init({
 
 `theme` isn't available via the `<script data-*>` auto-init path: use
 host-page CSS custom properties there instead, which need no JS either way.
+
+## Try the demo
+
+```bash
+git clone https://github.com/Vedanshu7/clicksplain.git && cd clicksplain
+npm install && npm run build
+cd examples/demo-nextjs && npm install
+cp .env.local.example .env.local   # add an Anthropic API key
+npm run dev                        # http://localhost:3000
+```
+
+Click the "?" at the bottom right, then any control on the machine. `examples/demo-host-page/` has plain HTML demos of every connector, including Puter (no key needed).
+
+## Quality
+
+Explanations are measured, not eyeballed. `evals/` runs 41 cases ([list](evals/CASES.md)) through the real widget code and server handler against the live model: domain jargon, everyday controls, containers, elements with nothing to go on, French pages, prompt-injection text on the page, and redacted regions, plus follow-up questions. Answers are graded by free code checks (plain text, length, no developer jargon, right language, never leaking a forbidden string, looking inside only when it should) and by a Claude judge against facts each case expects.
+
+| Flow | Cases | Pass rate (`claude-haiku-4-5`) |
+|---|---|---|
+| First explanation | 29 | 66% (19/29, ±17) |
+| Follow-up chat | 12 | 67% (8/12, ±27) |
+
+The ± is the 95% interval: at this size a single run moves by about that much (between two runs, cases with unchanged inputs flipped both ways), so treat a change as real only when it holds across repeated runs. Most remaining failures are the model inventing details the page doesn't show, or rambling when it isn't sure. A full run costs about $0.25. Cases are split train/validation/test so prompt changes can be optimized on one part and scored honestly on another.
+
+```bash
+npm run eval -- --flow .claude/hillclimb/explain --model claude-haiku-4-5
+```
+
+It reads `API_KEY` from `examples/demo-nextjs/.env.local`. The first run, and any run after the eval code changes, needs `--approve-harness` once: the runner refuses to execute eval code nobody has reviewed. Each run writes a `report.html` with every answer, grade, and the judge's reasons.
+
+The eval has already caught and fixed real bugs: a repeated "Let me check..." after looking inside, dropdown choices the model couldn't see, and hints next to a button ("Descale due in 12 shots") that never reached the model.
 
 ## Contributing
 

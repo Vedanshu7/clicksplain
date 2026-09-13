@@ -1,8 +1,22 @@
 # clicksplain + Next.js example
 
-A minimal Next.js (App Router) app showing `clicksplain` mounted end to end:
-the server half via a Route Handler, the client half via the widget's
-pre-built script, both configured entirely from `.env.local`.
+A Next.js (App Router) app showing `clicksplain` mounted end to end: the
+server half via a Route Handler, the client half via the widget's pre-built
+script, both configured entirely from `.env.local`.
+
+![Picking the Bloom slider: the widget streams a plain-language explanation](../../docs/media/clicksplain-explain.gif)
+
+The page is Crema, a made-up companion app for a home espresso machine. It's
+deliberately full of jargon (bloom, PID offset, channeling) so there's
+something worth explaining, and it exercises each kind of answer:
+
+- Any slider or its label: a live answer from the model, in the espresso
+  sense thanks to the widget's `siteContext` option.
+- Descale: tagged with `data-agent-id`, so it shows hand-written text from
+  `docsConfig` instantly, with no model call.
+- The "Share this profile" form: a container, so the model first asks the
+  browser what's inside it.
+- The widget's colors come from CSS custom properties in `globals.css`.
 
 ## Server-side: `src/app/api/clicksplain/route.ts`
 
@@ -52,7 +66,7 @@ version (`npm install clicksplain`) and drop the `turbopack.root` setting in
 `next.config.ts`, which only exists to follow that local link.
 
 Open `http://localhost:3000`, click the "?" button bottom-right, then click
-the export button or the invite form.
+any control on the machine.
 
 ## Configuration: all through `.env.local`
 

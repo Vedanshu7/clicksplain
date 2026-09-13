@@ -8,6 +8,7 @@ interface ExplainLike {
   docsContext: string | null;
   route: string;
   pageLanguage?: string | null;
+  siteContext?: string | null;
   toolExchange?: ToolExchangeEntry[];
 }
 
@@ -58,8 +59,11 @@ export function buildChatSystemPrompt(): string {
 }
 
 function elementContextLines(req: ExplainLike): string[] {
-  const { elementInfo, docsContext, route, pageLanguage } = req;
-  const lines: string[] = [`Page route: ${route}`, `Element tag: ${elementInfo.tagName}`];
+  const { elementInfo, docsContext, route, pageLanguage, siteContext } = req;
+  const lines: string[] = [];
+
+  if (siteContext) lines.push(`About this website: ${siteContext}`);
+  lines.push(`Page route: ${route}`, `Element tag: ${elementInfo.tagName}`);
 
   if (pageLanguage) lines.push(`Page language: ${pageLanguage}`);
   if (elementInfo.role) lines.push(`ARIA role: ${elementInfo.role}`);
@@ -100,6 +104,7 @@ function toolExchangeMessages(toolExchange: ToolExchangeEntry[]) {
     {
       role: "assistant" as const,
       content: [
+        ...(entry.preamble ? [{ type: "text" as const, text: entry.preamble }] : []),
         { type: "tool-call" as const, toolCallId: entry.toolCallId, toolName: entry.toolName, input: entry.input },
       ],
     },

@@ -38,6 +38,7 @@ const toolExchangeEntrySchema = z.object({
   toolName: z.literal("inspect_children"),
   input: z.unknown().transform((): Record<string, never> => ({})),
   result: z.array(elementInfoSchema).max(MAX_CHILDREN),
+  preamble: text().optional(),
 });
 
 const requestBodySchema = z
@@ -49,6 +50,7 @@ const requestBodySchema = z
     // Optional on the wire: a hand-written client that omits it still gets an
     // answer, just in whatever language the model picks.
     pageLanguage: nullableText(35).optional(),
+    siteContext: nullableText(500).optional(),
     toolExchange: z.array(toolExchangeEntrySchema).max(MAX_TOOL_ROUNDS).optional(),
     // Chat-only fields: optional at the schema level, required via superRefine
     // below when mode === "chat", so a malformed/incomplete chat request is
@@ -72,6 +74,7 @@ export interface ExplainRequestBody {
   docsContext: string | null;
   route: string;
   pageLanguage?: string | null;
+  siteContext?: string | null;
   toolExchange?: ToolExchangeEntry[];
 }
 
@@ -81,6 +84,7 @@ export interface ChatRequestBody {
   docsContext: string | null;
   route: string;
   pageLanguage?: string | null;
+  siteContext?: string | null;
   baseExplanation: string;
   history: ChatTurn[];
   question: string;

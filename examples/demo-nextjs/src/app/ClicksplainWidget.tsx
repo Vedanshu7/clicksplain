@@ -26,6 +26,16 @@ export function ClicksplainWidget() {
           connector: "byo-endpoint",
           endpoint: "/api/clicksplain",
           token: process.env.NEXT_PUBLIC_CLICKSPLAIN_TOKEN,
+          siteContext:
+            "Crema, the companion app for a home espresso machine: brew profile settings, shot history, and maintenance.",
+          // Elements tagged with data-agent-id get this text instantly, with
+          // no model call: for answers you want to word exactly yourself.
+          docsConfig: {
+            "/": {
+              descale:
+                "Runs a cleaning cycle that dissolves limescale from the boiler and pipes. It takes about 20 minutes and needs descaling solution in the water tank.",
+            },
+          },
         });
       }}
     />

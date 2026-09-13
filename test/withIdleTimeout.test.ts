@@ -3,7 +3,7 @@ import type { AgentConnector } from "../src/connectors/types";
 import { withIdleTimeout } from "../src/connectors/withIdleTimeout";
 import { collect, explainBody } from "./fixtures";
 
-const request = { ...explainBody, pageLanguage: null };
+const request = { ...explainBody, pageLanguage: null, siteContext: null };
 
 function connectorFrom(stream: (signal: AbortSignal) => AsyncIterable<string>): AgentConnector {
   return { explain: (_el, _req, signal) => stream(signal), chat: (_el, _req, signal) => stream(signal) };

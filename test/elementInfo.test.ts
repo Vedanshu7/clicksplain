@@ -18,6 +18,18 @@ describe("extractElementInfo nearby text", () => {
     expect(info.nearbyText).toBe("Email");
   });
 
+  it("falls back to a following hint when nothing usable comes before", () => {
+    const info = extractElementInfo(
+      pick(`<div><button>Flush</button><div id="target" role="button"></div><span>Descale due in 12 shots</span></div>`)
+    );
+    expect(info.nearbyText).toBe("Descale due in 12 shots");
+  });
+
+  it("adds a neighboring hint to an element's own text", () => {
+    const info = extractElementInfo(pick(`<div><button id="target">Descale</button><span>Descale due in 12 shots</span></div>`));
+    expect(info.nearbyText).toBe("Descale (next to: Descale due in 12 shots)");
+  });
+
   it("does not borrow the text of a preceding control", () => {
     const info = extractElementInfo(
       pick(`<section><button>Export report</button><form id="target"><input /></form></section>`)
@@ -35,6 +47,21 @@ describe("extractElementInfo nearby text", () => {
   it("never reads contenteditable text", () => {
     const info = extractElementInfo(pick(`<div id="target" contenteditable="true">my private draft</div>`));
     expect(info.nearbyText).toBeNull();
+  });
+});
+
+describe("extractElementInfo roles", () => {
+  it("names an input by its type, not always as a text box", () => {
+    expect(extractElementInfo(pick(`<input id="target" type="range" />`)).role).toBe("slider");
+    expect(extractElementInfo(pick(`<input id="target" type="checkbox" />`)).role).toBe("checkbox");
+    expect(extractElementInfo(pick(`<input id="target" type="email" />`)).role).toBe("textbox");
+  });
+});
+
+describe("extractElementInfo dropdowns", () => {
+  it("lists a dropdown's choices", () => {
+    const info = extractElementInfo(pick(`<select id="target"><option>Use it</option><option>Use and edit it</option></select>`));
+    expect(info.nearbyText).toBe("Choices: Use it, Use and edit it");
   });
 });
 

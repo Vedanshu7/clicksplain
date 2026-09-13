@@ -200,6 +200,13 @@ describe("createClicksplainHandler streaming", () => {
     expect(resumed.tools).toBeUndefined();
   });
 
+  it("uses systemPrompts in place of the built-in instructions", async () => {
+    upstream.mockResolvedValue(textAnswer("Hi"));
+    await handler({ systemPrompts: { explain: "Answer like a pirate." } })(post(explainBody)).then((r) => r.text());
+    const sent = JSON.parse(String(upstream.mock.calls[0]?.[1]?.body));
+    expect(JSON.stringify(sent.system)).toContain("Answer like a pirate.");
+  });
+
   it("sends the key only to the provider, never to the client or the logs", async () => {
     upstream.mockResolvedValue(
       new Response(JSON.stringify({ type: "error", error: { type: "authentication_error", message: "invalid x-api-key" } }), {

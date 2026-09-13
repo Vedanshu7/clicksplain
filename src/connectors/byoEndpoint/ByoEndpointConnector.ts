@@ -61,6 +61,7 @@ export class ByoEndpointConnector implements AgentConnector {
       const inner = this.postAndStream(buildBody(toolExchange), signal);
       let isFirstChunkOfRound = round > 0;
       let toolCall: PendingToolCall | null = null;
+      let roundText = "";
 
       while (true) {
         const step = await inner.next();
@@ -68,6 +69,7 @@ export class ByoEndpointConnector implements AgentConnector {
           toolCall = step.value.toolCall;
           break;
         }
+        roundText += step.value;
         if (isFirstChunkOfRound) {
           isFirstChunkOfRound = false;
           yield `\n\n${step.value}`;
@@ -97,6 +99,7 @@ export class ByoEndpointConnector implements AgentConnector {
         toolName: "inspect_children",
         input: toolCall.input as Record<string, never>,
         result,
+        ...(roundText.trim() ? { preamble: roundText.trim() } : {}),
       });
     }
   }

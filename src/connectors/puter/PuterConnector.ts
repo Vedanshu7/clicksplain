@@ -91,10 +91,12 @@ export class PuterConnector implements AgentConnector {
       // Same "let me check..." / blank-line / real-answer separation used by
       // every other connector: see ByokConnector.ts's textDeltasOrThrow.
       let isFirstChunkOfStep = step > 0;
+      let stepText = "";
       try {
         for await (const part of stream) {
           if (signal.aborted) return;
           if (part.type === "text") {
+            stepText += part.text;
             if (isFirstChunkOfStep) {
               isFirstChunkOfStep = false;
               yield `\n\n${part.text}`;
@@ -117,7 +119,9 @@ export class PuterConnector implements AgentConnector {
       messages.push(
         {
           role: "assistant",
-          content: "",
+          // What it already said ("Let me check..."), so the next step
+          // continues from it instead of repeating it.
+          content: stepText,
           tool_calls: [
             { id: pendingToolCall.id, type: "function", function: { name: "inspect_children", arguments: "{}" } },
           ],

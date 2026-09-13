@@ -43,6 +43,12 @@ export interface ClicksplainHandlerConfig {
   onRequest?: (request: Request) => Response | void | Promise<Response | void>;
   /** Requests with a larger body get a 413. Default 64 KiB. */
   maxBodyBytes?: number;
+  /**
+   * Replace the built-in instructions, e.g. to match your product's voice.
+   * Keep the built-in rules you still want (plain language, 1-3 sentences,
+   * when to use inspect_children): these replace the defaults entirely.
+   */
+  systemPrompts?: { explain?: string; chat?: string };
   /** portkey only: base URL of the adopter's self-hosted Portkey AI Gateway. */
   portkeyGatewayUrl?: string;
   /** portkey only: which underlying provider Portkey should route this request to. */
@@ -117,7 +123,9 @@ export function createClicksplainHandler(config: ClicksplainHandlerConfig): (req
     const body = parsed.body;
 
     const isChat = body.mode === "chat";
-    const systemPrompt = isChat ? buildChatSystemPrompt() : buildSystemPrompt();
+    const systemPrompt = isChat
+      ? (config.systemPrompts?.chat ?? buildChatSystemPrompt())
+      : (config.systemPrompts?.explain ?? buildSystemPrompt());
     const messages = isChat
       ? buildChatMessages(body as ChatRequestBody)
       : buildExplainMessages(body as ExplainRequestBody);

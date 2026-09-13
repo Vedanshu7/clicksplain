@@ -8,3 +8,9 @@ dist
 .env.local
 .env*.local
 .dev.vars
+
+# eval output: transcripts and generated reports are rebuilt from results.jsonl
+.claude/hillclimb/**/traces/
+.claude/hillclimb/**/report.html
+.claude/hillclimb/**/trajectory/
+.claude/hillclimb/**/progress.txt

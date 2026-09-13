@@ -1,0 +1,140 @@
+{
+  "reps": 1,
+  "goal": {
+    "target": "pass",
+    "direction": "higher",
+    "hold": [
+      "cost_usd"
+    ]
+  },
+  "train_ids": [
+    "crema-bloom",
+    "crema-preinfusion",
+    "crema-descale",
+    "crema-channeling",
+    "crema-profile",
+    "harbor-invite",
+    "harbor-export",
+    "harbor-avatar",
+    "app-search",
+    "app-save",
+    "crema-share-form",
+    "byok-invite-form",
+    "no-clues-icon",
+    "fr-newsletter",
+    "inject-nearby"
+  ],
+  "val_ids": [
+    "crema-peak-pressure",
+    "crema-flush",
+    "harbor-remove",
+    "harbor-integrations-link",
+    "harbor-member-list",
+    "inject-child"
+  ],
+  "test_ids": [
+    "crema-pid-offset",
+    "crema-ratio",
+    "harbor-bell",
+    "app-dark-mode",
+    "settings-menu",
+    "no-clues-div",
+    "fr-transfer",
+    "redacted-transfer"
+  ],
+  "harness_paths": [
+    "evals/lib/flows.ts",
+    "evals/lib/harness.ts",
+    "evals/lib/checks.ts",
+    "evals/lib/judge.ts",
+    "evals/cases/explain.ts"
+  ],
+  "metrics": [
+    {
+      "id": "pass",
+      "kind": "binary",
+      "label": "Pass"
+    },
+    {
+      "id": "key_facts",
+      "kind": "judge",
+      "label": "Key facts"
+    },
+    {
+      "id": "accurate",
+      "kind": "judge",
+      "label": "Accurate"
+    },
+    {
+      "id": "helpful",
+      "kind": "judge",
+      "label": "Helpful"
+    },
+    {
+      "id": "plain_text",
+      "kind": "binary",
+      "label": "Plain text"
+    },
+    {
+      "id": "concise",
+      "kind": "binary",
+      "label": "Concise"
+    },
+    {
+      "id": "no_jargon",
+      "kind": "binary",
+      "label": "No jargon"
+    },
+    {
+      "id": "language",
+      "kind": "binary",
+      "label": "Language"
+    },
+    {
+      "id": "safe",
+      "kind": "binary",
+      "label": "Safe"
+    },
+    {
+      "id": "inspect_ok",
+      "kind": "binary",
+      "label": "Looked inside"
+    }
+  ],
+  "perf_fields": [
+    {
+      "id": "cost_usd",
+      "label": "App cost",
+      "unit": "$"
+    },
+    {
+      "id": "judge_cost_usd",
+      "label": "Judge cost",
+      "unit": "$"
+    },
+    {
+      "id": "latency_s",
+      "label": "Latency",
+      "unit": "s"
+    },
+    {
+      "id": "output_words",
+      "label": "Words"
+    },
+    {
+      "id": "looked_inside",
+      "label": "Looked in"
+    }
+  ],
+  "prices": {
+    "claude-haiku-4-5": {
+      "in": 1,
+      "out": 5
+    },
+    "claude-sonnet-5-5": {
+      "in": 2,
+      "out": 10
+    }
+  },
+  "harness_sha": "437db2cc86af791054855e291503d6ad01e8930bd10760356ed1942aee892aa4"
+}

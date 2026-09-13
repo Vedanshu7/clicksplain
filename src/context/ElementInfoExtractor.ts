@@ -43,7 +43,21 @@ export function extractElementInfo(element: Element): ElementInfo {
   };
 }
 
+// An <input> is a slider, checkbox, button... depending on its type; calling
+// every one a "textbox" leads the model to explain a slider as a text field.
+const INPUT_ROLE_BY_TYPE: Record<string, string> = {
+  range: "slider",
+  checkbox: "checkbox",
+  radio: "radio",
+  button: "button",
+  submit: "button",
+  reset: "button",
+  number: "spinbutton",
+  search: "searchbox",
+};
+
 function implicitRole(element: Element): string | null {
+  if (element instanceof HTMLInputElement) return INPUT_ROLE_BY_TYPE[element.type] ?? "textbox";
   return IMPLICIT_ROLE_BY_TAG[element.tagName.toLowerCase()] ?? null;
 }
 
@@ -91,20 +105,33 @@ function resolveAriaLabel(element: Element): string | null {
   return null;
 }
 
-function resolveNearbyText(element: Element): string | null {
-  const own = directOwnText(element);
-  if (own) return truncate(own);
+const MAX_SELECT_OPTIONS = 10;
 
-  // A sibling's whole textContent could be an entire table row of names or
-  // balances: only take its own text, or that of a lone wrapper's child
-  // (`<span><b>Email</b></span>`), which is how labels are usually marked up.
-  // A sibling that is itself a control is a different thing to explain, not
-  // a label: a form right after an "Export report" button would otherwise be
-  // described to the model as an export form.
-  const sibling = element.previousElementSibling;
-  const siblingText =
-    sibling && !sibling.matches(INTERACTIVE_SELECTOR) ? directOwnText(sibling) ?? loneChildText(sibling) : null;
-  if (siblingText) return truncate(siblingText);
+function resolveNearbyText(element: Element): string | null {
+  // A dropdown's choices are what it's for, and they're developer-written
+  // labels, not anything the visitor typed.
+  if (element instanceof HTMLSelectElement) {
+    const choices = Array.from(element.options)
+      .slice(0, MAX_SELECT_OPTIONS)
+      .map((option) => option.label || option.text)
+      .filter(Boolean);
+    if (choices.length) return truncate(`Choices: ${choices.join(", ")}`);
+  }
+
+  // Text right beside an element is usually its label (before) or a hint or
+  // status about it (after, "Descale due in 12 shots"). Only a neighbor's own
+  // text, or a lone wrapper's child (`<span><b>Email</b></span>`): a whole
+  // sibling's textContent could be a table row of names or balances. A
+  // neighbor that is itself a control is a different thing to explain, not a
+  // label: a form after an "Export report" button isn't an export form.
+  const own = directOwnText(element);
+  const neighbors = [element.previousElementSibling, element.nextElementSibling]
+    .map((sibling) =>
+      sibling && !sibling.matches(INTERACTIVE_SELECTOR) ? directOwnText(sibling) ?? loneChildText(sibling) : null
+    )
+    .filter((text): text is string => Boolean(text));
+  if (own) return truncate(neighbors.length ? `${own} (next to: ${neighbors.join(" / ")})` : own);
+  if (neighbors.length) return truncate(neighbors.join(" / "));
 
   const parentText = element.parentElement ? directOwnText(element.parentElement) : null;
   if (parentText) return truncate(parentText);
