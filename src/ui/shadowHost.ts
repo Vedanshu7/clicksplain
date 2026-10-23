@@ -5,14 +5,13 @@ const GLOBAL_STYLE_ID = "clicksplain-global-style";
 
 export interface ShadowHost {
   hostElement: HTMLElement;
-  root: ShadowRoot;
   mount: HTMLElement;
 }
 
 let cached: ShadowHost | null = null;
 
 /**
- * Single shared closed-shadow-root mount point for all widget UI (fab, highlighter,
+ * Single shared open-shadow-root mount point for all widget UI (fab, highlighter,
  * popover). Isolates the widget's styles from the host page in both directions.
  */
 export function getShadowHost(): ShadowHost {
@@ -42,7 +41,7 @@ export function getShadowHost(): ShadowHost {
 
   injectGlobalStyle();
 
-  cached = { hostElement, root, mount };
+  cached = { hostElement, mount };
   return cached;
 }
 
@@ -85,14 +84,36 @@ function adoptStyles(target: ShadowRoot | Document, css: string): CSSStyleSheet 
 
 let globalSheet: CSSStyleSheet | null = null;
 
-// Small filled "?" badge, matching the fab/accent color: the actual mouse
-// pointer becomes a question mark while inspecting, not a generic crosshair.
-// `help` is the fallback keyword if the custom cursor image fails to load.
-const CURSOR_SVG =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' " +
-  "viewBox='0 0 28 28'%3E%3Ccircle cx='14' cy='14' r='12' fill='rgb(91,91,245)' " +
-  "stroke='white' stroke-width='2'/%3E%3Ctext x='14' y='19' font-family='Arial,sans-serif' " +
-  "font-size='15' font-weight='bold' fill='white' text-anchor='middle'%3E%3F%3C/text%3E%3C/svg%3E";
+const DEFAULT_ACCENT = "#5b5bf5";
+// The accent lands inside an SVG attribute: anything that could close it falls
+// back to the default rather than breaking the cursor.
+const SAFE_COLOR = /^[#\w\s(),.%/-]+$/;
+
+// Small filled "?" badge in the accent color: the actual mouse pointer becomes
+// a question mark while inspecting, not a generic crosshair. `help` is the
+// fallback keyword if the custom cursor image fails to load.
+function inspectCursorCss(accent: string): string {
+  const fill = SAFE_COLOR.test(accent) ? accent : DEFAULT_ACCENT;
+  const svg =
+    "<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'>" +
+    `<circle cx='14' cy='14' r='12' fill='${fill}' stroke='white' stroke-width='2'/>` +
+    "<text x='14' y='19' font-family='Arial,sans-serif' font-size='15' font-weight='bold' " +
+    "fill='white' text-anchor='middle'>?</text></svg>";
+  return `body.oa-inspecting, body.oa-inspecting * {
+      cursor: url("data:image/svg+xml,${encodeURIComponent(svg)}") 14 14, help !important;
+    }`;
+}
+
+/** Recolors the inspect-mode cursor, e.g. to the accent a theme resolved to. */
+export function setInspectCursorColor(accent: string): void {
+  const css = inspectCursorCss(accent);
+  if (globalSheet) {
+    globalSheet.replaceSync(css);
+    return;
+  }
+  const style = document.getElementById(GLOBAL_STYLE_ID);
+  if (style) style.textContent = css;
+}
 
 // Two things that must be registered on the document rather than in the
 // shadow root's own stylesheet, for two different reasons:
@@ -106,12 +127,7 @@ const CURSOR_SVG =
 function injectGlobalStyle(): void {
   if (globalSheet || document.getElementById(GLOBAL_STYLE_ID)) return;
   registerSpinAngle();
-  globalSheet = adoptStyles(
-    document,
-    `body.oa-inspecting, body.oa-inspecting * {
-      cursor: url("${CURSOR_SVG}") 14 14, help !important;
-    }`
-  );
+  globalSheet = adoptStyles(document, inspectCursorCss(DEFAULT_ACCENT));
 }
 
 function registerSpinAngle(): void {

@@ -17,7 +17,7 @@ export class ElementHighlighter {
   constructor(
     mount: HTMLElement,
     badgeText: string,
-    /** Same target resolution the picker uses, so what's outlined is what gets picked. */
+    // Same target resolution the picker uses, so what's outlined is what gets picked.
     private readonly resolveTarget: (event: Event) => Element | null
   ) {
     this.box = document.createElement("div");

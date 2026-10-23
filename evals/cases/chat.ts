@@ -1,8 +1,5 @@
 import type { ChatCase } from "./types";
-import { CREMA, HARBOR } from "./explain";
-
-const crema = (html: string) => `<main><h1>Crema</h1>${html}</main>`;
-const harbor = (html: string) => `<main><h1>Acme team</h1>${html}</main>`;
+import { CREMA, HARBOR, crema, harbor } from "./explain";
 
 const BLOOM = crema(`<div><label for="bloom">Bloom</label><input id="bloom" type="range" min="0" max="10"></div>`);
 const PRESSURE = crema(`<div><label for="peak">Peak pressure</label><input id="peak" type="range" min="6" max="11" step="0.5"><span>Gauge redline starts at 10 bar</span></div>`);

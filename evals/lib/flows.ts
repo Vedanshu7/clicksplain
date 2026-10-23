@@ -1,4 +1,4 @@
-// The three hooks evals/run-eval.mjs delegates to. The flow is picked from the
+// The four hooks evals/run-eval.mjs delegates to. The flow is picked from the
 // --flow directory name: .claude/hillclimb/explain or .claude/hillclimb/chat.
 import { basename } from "node:path";
 import { CHAT_CASES } from "../cases/chat";
@@ -27,7 +27,7 @@ const PRICES: Record<string, { in: number; out: number }> = {
 
 type UsageLike = { [K in keyof Usage]?: number | null };
 
-function cost(model: string | undefined, usage: UsageLike | undefined): number {
+export function cost(model: string | undefined, usage: UsageLike | undefined): number {
   const price = Object.entries(PRICES).find(([id]) => model?.startsWith(id))?.[1];
   if (!price || !usage) return NaN;
   const input =
@@ -87,7 +87,7 @@ export async function gradeCase(c: LoadedCase, run: CaseRun): Promise<GradedCase
   };
 }
 
-export function perfFrom(run: CaseRun & { judge_model?: string; judge_usage?: Partial<Usage> }): Record<string, number> {
+export function perfFrom(run: CaseRun): Record<string, number> {
   return {
     output_words: run.output.split(/\s+/).filter(Boolean).length,
     looked_inside: run.inspected ? 1 : 0,
@@ -96,4 +96,3 @@ export function perfFrom(run: CaseRun & { judge_model?: string; judge_usage?: Pa
   };
 }
 
-export { cost };

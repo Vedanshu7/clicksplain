@@ -136,7 +136,7 @@ describe("createClicksplainHandler access control", () => {
 
 describe("createClicksplainHandler request validation", () => {
   it("rejects an oversized body by declared length", async () => {
-    const response = await handler({ maxBodyBytes: 100 })(post({ ...explainBody, route: "/".repeat(200) }));
+    const response = await handler({ maxBodyBytes: 100 })(post("{}", { "content-length": "5000" }));
     expect(response.status).toBe(413);
   });
 

@@ -46,8 +46,8 @@ you're editing over anything written here.
 - The wire protocol (validation, auth, prompt building, model calls, SSE
   streaming) lives once, in `src/shared/` and `src/server/createHandler.ts`.
   `examples/proxy-node-http` is a thin wrapper around
-  `createClicksplainHandler`: there's no separate logic in it to keep in
-  sync. A fix belongs in `src/shared/` or `src/server/`, not the example.
+  `createClicksplainHandler`: its only logic of its own is a sample rate
+  limiter passed in through the `onRequest` hook. A fix belongs in `src/shared/` or `src/server/`, not the example.
 
 ## Security-sensitive code
 

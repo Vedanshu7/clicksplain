@@ -51,8 +51,8 @@ interface Capture {
   callsFinished: number;
 }
 
-
 let capture: Capture | null = null;
+
 export interface SystemPrompts {
   explain?: string;
   chat?: string;

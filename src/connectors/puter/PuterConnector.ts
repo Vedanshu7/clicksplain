@@ -57,13 +57,11 @@ export class PuterConnector implements AgentConnector {
     yield* this.runWithToolLoop(element, messages, this.config.chatModel ?? this.config.model, signal);
   }
 
-  /**
-   * Puter's chat() streams one step at a time with no AI-SDK-style automatic
-   * multi-step tool loop, so this drives the same bounded round-trip
-   * manually: a `tool_use` chunk ends the current stream, the (real, local)
-   * DOM query runs immediately since the browser has the DOM, and its result
-   * is appended to `messages` before calling chat() again.
-   */
+  // Puter's chat() streams one step at a time with no AI-SDK-style automatic
+  // multi-step tool loop, so this drives the same bounded round-trip
+  // manually: a `tool_use` chunk ends the current stream, the (real, local)
+  // DOM query runs immediately since the browser has the DOM, and its result
+  // is appended to `messages` before calling chat() again.
   private async *runWithToolLoop(
     element: Element,
     messages: PuterChatMessage[],
@@ -123,7 +121,7 @@ export class PuterConnector implements AgentConnector {
           // continues from it instead of repeating it.
           content: stepText,
           tool_calls: [
-            { id: pendingToolCall.id, type: "function", function: { name: "inspect_children", arguments: "{}" } },
+            { id: pendingToolCall.id, type: "function", function: { name: INSPECT_CHILDREN_NAME, arguments: "{}" } },
           ],
         },
         { role: "tool", tool_call_id: pendingToolCall.id, content: JSON.stringify(result) }
@@ -175,13 +173,9 @@ function toError(err: unknown): Error {
   return new Error("Puter request failed. Please try again.");
 }
 
-// buildChatMessages's return type also covers the (never-populated, for this
-// connector) toolExchange-derived shape from src/shared/promptBuilder.ts,
-// whose `content` is a structured array rather than a string: this connector
-// drives its own in-process tool loop instead of that HTTP-relay pattern, so
-// req.toolExchange is always empty and content is always a string in
-// practice; the runtime check makes that assumption explicit rather than
-// silently mis-serializing if it's ever wrong.
+// Structured (array) content only comes from toolExchange, which this
+// connector never sends: it runs its own tool loop in-process. The check
+// narrows the type and fails loudly if that ever changes.
 function toPuterMessages(built: readonly { role: string; content: unknown }[]): PuterChatMessage[] {
   return built.map((m) => {
     if (typeof m.content !== "string") {

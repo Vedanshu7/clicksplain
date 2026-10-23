@@ -1,3 +1,5 @@
+import type { ChatTurn } from "../../src/shared/wire";
+
 export type Split = "train" | "val" | "test";
 
 interface CaseBase {
@@ -27,6 +29,6 @@ export type ExplainCase = CaseBase;
 export interface ChatCase extends CaseBase {
   /** The first explanation already shown in the popover. */
   baseExplanation: string;
-  history?: { role: "user" | "assistant"; text: string }[];
+  history?: ChatTurn[];
   question: string;
 }

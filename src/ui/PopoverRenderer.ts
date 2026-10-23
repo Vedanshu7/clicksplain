@@ -6,7 +6,7 @@ import type { Labels } from "./labels";
 
 /**
  * Animated popover anchored to the picked element. Renders inside the shared
- * closed shadow root; positioning tracks the anchor via floating-ui's autoUpdate
+ * open shadow root; positioning tracks the anchor via floating-ui's autoUpdate
  * (scroll/resize/layout shifts) until closed.
  */
 export class PopoverRenderer {
@@ -106,6 +106,7 @@ export class PopoverRenderer {
     this.content.textContent = message;
     this.content.classList.add("oa-popover-error");
     this.content.setAttribute("aria-busy", "false");
+    this.reposition();
   }
 
   complete(): void {
@@ -137,7 +138,7 @@ export class PopoverRenderer {
   close(): void {
     if (!this.anchor) return;
     this.visible = false;
-    void animateOut(this.panel);
+    animateOut(this.panel);
     this.stopAutoUpdate?.();
     this.stopAutoUpdate = null;
     this.anchor = null;
@@ -177,9 +178,6 @@ export class PopoverRenderer {
       // for each candidate in allowedPlacements and picks whichever one
       // genuinely fits: right first (least likely to cover neighboring
       // content), falling through left/top/bottom only when right doesn't
-      // have room. This replaces the old placement:"top" + flip() pairing,
-      // which only ever had "bottom" as a fallback and so always landed
-      // below the element regardless of whether that was the best spot.
       middleware: [
         offset(10),
         autoPlacement({ allowedPlacements: ["right", "left", "top", "bottom"], padding: 8 }),

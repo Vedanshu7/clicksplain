@@ -97,23 +97,19 @@ export function buildUserMessage(req: ExplainLike): string {
   return elementContextLines(req).join("\n");
 }
 
-/** The framing content fused into the first real user turn: element context + what was already shown. */
+// The framing content fused into the first real user turn: element context + what was already shown.
 function buildChatContextMessage(req: ChatLike): string {
   const lines = elementContextLines(req);
   lines.push(`Explanation already shown: ${req.baseExplanation}`);
   return lines.join("\n");
 }
 
-/**
- * Reconstructs the assistant tool-call + tool tool-result message pair for each
- * already-resolved round of the DOM reasoning loop, so the model sees a normal
- * conversation history when the call is resumed after the client executed
- * inspect_children, even though that execution happened in a *separate* HTTP
- * request than the one that's resuming it (a byo-endpoint server is stateless
- * per-request; BYOK never populates toolExchange at all, since the AI SDK's own
- * multi-step loop handles tool calls in-memory within one streamText call, so
- * this is always a no-op there).
- */
+// Reconstructs the assistant tool-call + tool tool-result message pair for each
+// already-resolved round of the DOM reasoning loop, so the model sees a normal
+// conversation history when the call is resumed after the client executed
+// inspect_children in a separate HTTP request (a byo-endpoint server is
+// stateless per request). BYOK never populates toolExchange: the AI SDK's own
+// multi-step loop handles tool calls in memory within one streamText call.
 function toolExchangeMessages(toolExchange: ToolExchangeEntry[]): PromptMessage[] {
   return toolExchange.flatMap((entry) => [
     {
@@ -145,11 +141,11 @@ export function buildExplainMessages(req: ExplainLike): PromptMessage[] {
 }
 
 /** Builds a correctly-alternating messages array for a chat turn. */
-// The framing context (element info + docsContext + baseExplanation) is fused
-// into the first user turn rather than sent as its own message: a standalone
-// context message would sit back to back with the next user turn, and the
-// model then answers as if no question was asked at all.
 export function buildChatMessages(req: ChatLike): PromptMessage[] {
+  // The framing context (element info + docsContext + baseExplanation) is fused
+  // into the first user turn rather than sent as its own message: a standalone
+  // context message would sit back to back with the next user turn, and the
+  // model then answers as if no question was asked at all.
   const context = buildChatContextMessage(req);
 
   if (req.history.length === 0) {

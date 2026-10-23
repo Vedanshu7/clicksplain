@@ -18,10 +18,12 @@
  */
 .oa-mount {
   all: initial;
-  font-family: var(--clicksplain-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+  --oa-font-family: var(--clicksplain-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+  --oa-text: var(--clicksplain-text, #1a1a1a);
+  font-family: var(--oa-font-family);
   font-size: 14px;
   line-height: 1.4;
-  color: var(--clicksplain-text, #1a1a1a);
+  color: var(--oa-text);
   --oa-accent: var(--clicksplain-accent, #5b5bf5);
   --oa-accent-active: var(--clicksplain-accent-active, #3f3fe0);
   --oa-accent-contrast: var(--clicksplain-accent-contrast, #ffffff);
@@ -34,7 +36,7 @@
 
 @media (prefers-color-scheme: dark) {
   .oa-mount {
-    color: var(--clicksplain-text, #f2f2f2);
+    --oa-text: var(--clicksplain-text, #f2f2f2);
     --oa-surface: var(--clicksplain-surface, #26262c);
     --oa-border: var(--clicksplain-border, rgba(255, 255, 255, 0.12));
     --oa-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
@@ -181,8 +183,8 @@
   overscroll-behavior: contain;
   pointer-events: none;
   opacity: 0;
-  /* transform (translate+scale) is fully owned by PopoverRenderer/animations.ts,
-     since it also encodes floating-ui's computed anchor position. */
+  /* transform (translate+scale) is fully owned by PopoverRenderer, since it
+     also encodes floating-ui's computed anchor position. */
   transition: opacity 0.14s ease, transform 0.14s ease;
   z-index: 2;
 }
@@ -198,13 +200,13 @@
   outline: none;
 }
 
-/* `all: unset` on the controls below also strips the browser's focus ring,
-   so keyboard users need one put back explicitly. */
 .oa-mount[data-position="bottom-left"] .oa-fab {
   right: auto;
   left: calc(20px + env(safe-area-inset-left, 0px));
 }
 
+/* `all: unset` on these controls also strips the browser's focus ring, so
+   keyboard users need one put back explicitly. */
 .oa-fab:focus-visible,
 .oa-popover-close:focus-visible,
 .oa-popover-chat-input:focus-visible,

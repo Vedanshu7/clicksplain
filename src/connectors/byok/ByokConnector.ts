@@ -28,22 +28,18 @@ export interface ByokConnectorConfig {
 const MAX_TOOL_STEPS = MAX_TOOL_ROUNDS + 1;
 const DEV_HOSTNAME_PATTERNS = [/^localhost$/, /^127\.0\.0\.1$/, /\.local$/];
 
-/**
- * `result.textStream` deliberately excludes error parts (per the AI SDK's own
- * docs on StreamTextResult): a mid-stream provider error (bad model id, rate
- * limit, etc.) ends that stream silently with zero chunks and zero thrown
- * exception. We iterate the full `result.stream` instead and throw explicitly
- * on an error part, so AgentConnector's error contract (callers wrap explain/
- * chat in try/catch to show popover.setError/setChatError) actually holds.
- */
+// `result.textStream` deliberately excludes error parts (per the AI SDK's own
+// docs on StreamTextResult): a mid-stream provider error (bad model id, rate
+// limit, etc.) ends that stream silently with zero chunks and zero thrown
+// exception. We iterate the full `result.stream` instead and throw explicitly
+// on an error part, so AgentConnector's error contract (callers wrap explain/
+// chat in try/catch to show popover.setError/setChatError) actually holds.
 async function* textDeltasOrThrow(
   result: { stream: AsyncIterable<{ type: string; text?: string; error?: unknown }> }
 ): AsyncIterable<string> {
-  // Prompting the model to leave a blank line after its "let me check..." preamble
-  // and before the real answer proved unreliable (verified against the live API,
-  // it consistently runs them together with no separator). Injecting the break here
-  // instead, at the one point we can detect precisely: the first text-delta of a new
-  // step right after a tool-call is the start of the real answer.
+  // The model runs its "let me check..." preamble and the real answer together
+  // even when asked not to, so the break goes in here, at the one point we can
+  // detect precisely: the first text-delta right after a tool-call.
   let justUsedTool = false;
   for await (const part of result.stream) {
     if (part.type === "tool-call") {

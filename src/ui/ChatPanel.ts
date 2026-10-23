@@ -60,7 +60,7 @@ export class ChatPanel {
     this.turnsList.appendChild(turn);
   }
 
-  /** Shows a small generative-blob placeholder turn while waiting for the first token. */
+  // A small generative-blob placeholder turn while waiting for the first token.
   private showLoadingTurn(): void {
     this.loadingTurn = document.createElement("div");
     this.loadingTurn.className = "oa-popover-chat-turn oa-popover-chat-turn-assistant oa-popover-chat-turn-loading";

@@ -56,8 +56,7 @@ export interface ClicksplainHandlerConfig {
 }
 
 // No `execute`: a server handler has no DOM access at all. The model's tool-call
-// pauses the stream (verified: finishes cleanly with finishReason "tool-calls",
-// no hang/error) and we relay it to the client as a "tool-call" frame; the
+// ends the stream with finishReason "tool-calls" and we relay it to the client as a "tool-call" frame; the
 // client is the one with the DOM, so it runs the query and re-POSTs with the
 // result in `toolExchange` to resume the conversation.
 const inspectChildrenTool = tool({
@@ -147,7 +146,7 @@ export function createClicksplainHandler(config: ClicksplainHandlerConfig): (req
     // (the response stream's cancel), so a closed tab stops the upstream LLM
     // call instead of letting it run, and bill, to completion.
     const upstream = new AbortController();
-    request.signal?.addEventListener("abort", () => upstream.abort(), { once: true });
+    request.signal.addEventListener("abort", () => upstream.abort(), { once: true });
 
     const result = streamText({
       model,

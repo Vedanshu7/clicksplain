@@ -99,7 +99,7 @@ function writeStore(store: CacheStore): boolean {
   }
 }
 
-/** Evicts oldest-by-createdAt entries across the whole store (not per-route) until at/under the cap. */
+// Evicts oldest-by-createdAt entries across the whole store (not per-route) until at/under the cap.
 function evictOverflow(store: CacheStore, cap: number): void {
   const flat: { route: string; signature: string; createdAt: number }[] = [];
   for (const [route, bySignature] of Object.entries(store.entries)) {

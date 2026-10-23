@@ -7,7 +7,7 @@ import { applyTheme, type ThemeConfig } from "./ui/theme";
 import { resolveLabels, type Labels } from "./ui/labels";
 import { errorMessageFor } from "./ui/errorMessage";
 import { extractElementInfo } from "./context/elementInfoExtractor";
-import { type DocsConfig } from "./context/taggingResolver";
+import type { DocsConfig } from "./context/taggingResolver";
 import { getCurrentRoute } from "./context/routeMatcher";
 import {
   ByoEndpointConnector,
@@ -87,7 +87,7 @@ class ClicksplainInstance {
 
   constructor(config: InitConfig) {
     // Validate/construct the connector before touching the DOM at all, so a bad
-    // config (e.g. missing apiKey) fails cleanly with zero UI side effects rather
+    // config (e.g. a byo-endpoint connector without an endpoint) fails cleanly with zero UI side effects rather
     // than leaving an orphaned popover behind from a half-finished construction.
     this.labels = resolveLabels(config.labels);
     this.connector = withIdleTimeout(
@@ -114,7 +114,7 @@ class ClicksplainInstance {
     // handlePick, since open() re-anchors rather than closing (onClose never
     // fires there).
     this.popover.onClose(() => {
-      this.session.cancelActiveExplain();
+      this.session.cancelActive();
       this.chatSession.reset();
       this.currentPick = null;
     });
@@ -122,7 +122,7 @@ class ClicksplainInstance {
 
   destroy(): void {
     this.unsubscribePick();
-    this.session.cancelActiveExplain();
+    this.session.cancelActive();
     this.picker.destroy();
     this.popover.destroy();
     removeShadowHost();
@@ -133,7 +133,7 @@ class ClicksplainInstance {
     const route = getCurrentRoute();
     const pageLanguage = document.documentElement.lang || null;
 
-    const signal = this.session.beginExplain();
+    const signal = this.session.beginRequest();
     this.popover.open(element);
     this.chatSession.reset();
     this.currentPick = null;
@@ -171,7 +171,7 @@ class ClicksplainInstance {
     // Snapshot turns prior to this question: chatSession.addUserTurn below
     // records it for the *next* turn's history, not this request's.
     const history = [...this.chatSession.history];
-    const signal = this.session.beginChatTurn();
+    const signal = this.session.beginRequest();
     this.chatSession.addUserTurn(question);
 
     const request: ChatRequest = {

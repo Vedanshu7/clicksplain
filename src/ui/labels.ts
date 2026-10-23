@@ -19,7 +19,7 @@ export interface Labels {
   genericError: string;
 }
 
-export const DEFAULT_LABELS: Labels = {
+const DEFAULT_LABELS: Labels = {
   fab: "Explain this UI",
   highlightBadge: "Click to explain",
   popover: "Explanation",

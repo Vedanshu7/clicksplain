@@ -1,7 +1,7 @@
 import type { AgentConnector, ChatRequest, ExplainChunk, ExplainRequest, ToolExchangeEntry } from "../types";
 import { parseSseStream } from "../sse";
 import { inspectChildren } from "../../context/inspectChildren";
-import { MAX_TOOL_ROUNDS } from "../../shared/wire";
+import { INSPECT_CHILDREN_NAME, MAX_TOOL_ROUNDS } from "../../shared/wire";
 
 export interface ByoEndpointConnectorConfig {
   endpoint: string;
@@ -23,9 +23,9 @@ interface PendingToolCall {
 }
 
 /**
- * Streams from an adopter-owned proxy (e.g. the reference Cloudflare Worker or
- * Vercel Edge templates in examples/) implementing the canonical delta/done/error
- * SSE protocol. This is the recommended production path: the real LLM key never
+ * Streams from an adopter-owned endpoint (createClicksplainHandler from
+ * "clicksplain/server", or anything speaking the same delta/done/error SSE
+ * protocol). This is the recommended production path: the real LLM key never
  * reaches the browser.
  *
  * The proxy has no DOM access, so when the model wants to inspect a container's
@@ -53,11 +53,10 @@ export class ByoEndpointConnector implements AgentConnector {
 
     for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
       // Round > 0 means the previous round paused on a tool-call: its answer
-      // resumes in a brand new HTTP response here. Prompting the model to leave
-      // a blank line after its "let me check..." preamble proved unreliable
-      // (verified against the live API, it runs them together with no
-      // separator), so we inject the break here instead, at the one point we
-      // can detect precisely: the first chunk of a resumed round.
+      // resumes in a brand new HTTP response here. The model runs its "let me
+      // check..." preamble and the answer together even when asked not to, so
+      // the break goes in here, at the one point we can detect precisely: the
+      // first chunk of a resumed round.
       const inner = this.postAndStream(buildBody(toolExchange), signal);
       let isFirstChunkOfRound = round > 0;
       let toolCall: PendingToolCall | null = null;
@@ -80,23 +79,22 @@ export class ByoEndpointConnector implements AgentConnector {
 
       if (!toolCall) return; // finished normally, no tool needed (or none left)
 
-      // Defensive backstop: the proxy forces a text-only finish once toolExchange
-      // already has MAX_TOOL_ROUNDS entries, so this should be unreachable in
-      // practice, but degrade gracefully rather than looping if it ever happens.
+      // createClicksplainHandler forces a text-only finish after MAX_TOOL_ROUNDS,
+      // but a hand-written endpoint might not: stop here rather than loop.
       if (round === MAX_TOOL_ROUNDS) {
         throw new Error(
           "I wasn't able to figure this out with confidence. Feel free to ask a follow-up question!"
         );
       }
 
-      if (toolCall.toolName !== "inspect_children") {
+      if (toolCall.toolName !== INSPECT_CHILDREN_NAME) {
         throw new Error(`clicksplain: unsupported tool "${toolCall.toolName}"`);
       }
 
       const result = inspectChildren(element);
       toolExchange.push({
         toolCallId: toolCall.toolCallId,
-        toolName: "inspect_children",
+        toolName: INSPECT_CHILDREN_NAME,
         input: toolCall.input as Record<string, never>,
         result,
         ...(roundText.trim() ? { preamble: roundText.trim() } : {}),

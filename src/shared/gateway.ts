@@ -4,7 +4,7 @@ import type { LanguageModel } from "ai";
 
 export type Provider = "anthropic" | "openai" | "portkey";
 
-export const DEFAULT_ANTHROPIC_MODEL = "claude-haiku-4-5";
+const DEFAULT_ANTHROPIC_MODEL = "claude-haiku-4-5";
 export const MAX_TOKENS = 400;
 
 export interface CreateModelOptions {
@@ -66,8 +66,8 @@ export function createModel(
     }
     // `.chat(modelId)`, not the bare `(modelId)` call: the latter defaults to
     // OpenAI's newer Responses API, which Portkey's gateway doesn't speak for
-    // non-OpenAI providers ("createModelResponse is not supported by <provider>",
-    // verified against a local Portkey instance). `.chat()` forces classic Chat
+    // non-OpenAI providers ("createModelResponse is not supported by
+    // <provider>"). `.chat()` forces classic Chat
     // Completions (POST {baseURL}/chat/completions), which Portkey does support.
     return createOpenAI({
       apiKey,

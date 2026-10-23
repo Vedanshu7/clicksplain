@@ -23,6 +23,7 @@ async function* guard(
   // A separate controller, so timing out also stops the underlying request.
   const inner = new AbortController();
   const forwardAbort = () => inner.abort();
+  if (outer.aborted) inner.abort();
   outer.addEventListener("abort", forwardAbort, { once: true });
   const iterator = start(inner.signal)[Symbol.asyncIterator]();
 

@@ -5,7 +5,7 @@ const MAX_TEXT_LENGTH = 200;
 const INTERACTIVE_SELECTOR =
   "button, a[href], input, select, textarea, [role='button'], [role='link'], [role='menuitem'], [role='tab']";
 
-// Fallback ARIA role by tag, used when no explicit role/aria-label exists so the
+// Fallback ARIA role by tag, used when no explicit role exists so the
 // LLM still gets some semantic signal for plain unlabeled markup.
 const IMPLICIT_ROLE_BY_TAG: Record<string, string> = {
   button: "button",
@@ -172,5 +172,5 @@ function truncate(text: string): string {
 }
 
 function cssEscape(value: string): string {
-  return typeof CSS !== "undefined" && CSS.escape ? CSS.escape(value) : value;
+  return CSS.escape(value);
 }

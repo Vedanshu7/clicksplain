@@ -16,7 +16,11 @@ describe("createModel portkey", () => {
   });
 
   it("requires a model and both portkey settings", () => {
-    expect(() => createModel("portkey", undefined, "key", { portkeyGatewayUrl: "https://g", portkeyProvider: "x" })).toThrow();
-    expect(() => createModel("portkey", "m", "key", { portkeyGatewayUrl: "https://g" })).toThrow();
+    expect(() => createModel("portkey", undefined, "key", { portkeyGatewayUrl: "https://g", portkeyProvider: "x" })).toThrow(
+      "requires a model"
+    );
+    expect(() => createModel("portkey", "m", "key", { portkeyGatewayUrl: "https://g" })).toThrow(
+      "requires both portkeyGatewayUrl"
+    );
   });
 });

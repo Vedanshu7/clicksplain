@@ -5,9 +5,9 @@ import { MAX_CHILDREN, MAX_TOOL_ROUNDS, type ChatTurn, type ElementInfo, type To
 // in elementInfoExtractor.ts): that cap only protects the real widget; a request
 // built by hand bypasses it entirely, so the server enforces its own caps here
 // rather than trusting the client's.
-export const MAX_TEXT_LENGTH = 1000;
-export const MAX_ARRAY_ITEMS = 30;
-export const MAX_HISTORY_TURNS = 20;
+const MAX_TEXT_LENGTH = 1000;
+const MAX_ARRAY_ITEMS = 30;
+const MAX_HISTORY_TURNS = 20;
 
 const text = (max = MAX_TEXT_LENGTH) => z.string().max(max);
 const nullableText = (max = MAX_TEXT_LENGTH) => z.string().max(max).nullable();

@@ -3,8 +3,8 @@ import type { ExplainCase } from "./types";
 export const CREMA = "Crema, the companion app for a home espresso machine: brew profile settings, shot history, and maintenance.";
 export const HARBOR = "Harbor, a team workspace app: members, projects, integrations, and billing.";
 
-const crema = (html: string) => `<main><h1>Crema</h1>${html}</main>`;
-const harbor = (html: string) => `<main><h1>Acme team</h1>${html}</main>`;
+export const crema = (html: string): string => `<main><h1>Crema</h1>${html}</main>`;
+export const harbor = (html: string): string => `<main><h1>Acme team</h1>${html}</main>`;
 
 export const EXPLAIN_CASES: ExplainCase[] = [
   // Domain jargon: the hard part is explaining it in the right sense.

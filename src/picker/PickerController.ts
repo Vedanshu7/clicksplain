@@ -1,5 +1,5 @@
 import type { SessionState } from "../state/SessionState";
-import { getShadowHost } from "../ui/shadowHost";
+import { getShadowHost, setInspectCursorColor } from "../ui/shadowHost";
 import { ElementHighlighter } from "./ElementHighlighter";
 import { isIgnored } from "../context/privacy";
 import type { Labels } from "../ui/labels";
@@ -23,6 +23,7 @@ export class PickerController {
   private readonly highlighter: ElementHighlighter;
   private readonly fab: HTMLButtonElement;
   private readonly hostElement: HTMLElement;
+  private readonly mount: HTMLElement;
   private readonly pickHandlers = new Set<PickHandler>();
   private pressedTarget: Element | null = null;
   private suppressClicksUntil = 0;
@@ -33,6 +34,7 @@ export class PickerController {
   ) {
     const { hostElement, mount } = getShadowHost();
     this.hostElement = hostElement;
+    this.mount = mount;
 
     this.fab = document.createElement("button");
     this.fab.type = "button";
@@ -45,7 +47,7 @@ export class PickerController {
 
     this.highlighter = new ElementHighlighter(mount, labels.highlightBadge, (event) => this.pickTarget(event));
 
-    this.session.addEventListener("modechange", this.handleModeChange as EventListener);
+    this.session.addEventListener("modechange", this.handleModeChange);
     // window capture runs before any listener the host page registers on
     // document or on the element itself, so the page never sees the press.
     for (const type of SWALLOWED_EVENTS) window.addEventListener(type, this.handlePointerEvent, true);
@@ -59,7 +61,7 @@ export class PickerController {
   }
 
   destroy(): void {
-    this.session.removeEventListener("modechange", this.handleModeChange as EventListener);
+    this.session.removeEventListener("modechange", this.handleModeChange);
     for (const type of SWALLOWED_EVENTS) window.removeEventListener(type, this.handlePointerEvent, true);
     window.removeEventListener("keydown", this.handleKeyDown, true);
     document.body.classList.remove("oa-inspecting");
@@ -74,13 +76,14 @@ export class PickerController {
     document.body.classList.toggle("oa-inspecting", inspecting);
     this.pressedTarget = null;
     if (inspecting) {
+      setInspectCursorColor(getComputedStyle(this.mount).getPropertyValue("--oa-accent").trim());
       this.highlighter.enable();
     } else {
       this.highlighter.disable();
     }
   };
 
-  /** The page element an event is really about, or null for our own UI. */
+  // The page element an event is really about, or null for our own UI.
   private pickTarget(event: Event): Element | null {
     const path = event.composedPath();
     if (path.includes(this.hostElement)) return null;
