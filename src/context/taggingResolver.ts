@@ -2,8 +2,8 @@
 export type DocsConfig = Record<string, Record<string, string>>;
 
 /**
- * v2: a non-null return is a full short-circuit of the LLM call (see
- * ExplanationResolver.ts); in v1 this was only ever passed as LLM context.
+ * A non-null return is a full short-circuit of the LLM call (see
+ * explanationResolver.ts).
  *
  * Resolves a doc snippet for a tagged element using a composite key of
  * (route, data-agent-id), so the same tag name can mean different things on

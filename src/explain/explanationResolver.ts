@@ -1,5 +1,5 @@
 import type { AgentConnector, ElementInfo, ExplainRequest } from "../connectors/types";
-import { resolveDocsContext, type DocsConfig } from "../context/TaggingResolver";
+import { resolveDocsContext, type DocsConfig } from "../context/taggingResolver";
 import type { ExplanationCache } from "../cache/ExplanationCache";
 import type { PopoverRenderer } from "../ui/PopoverRenderer";
 import type { Labels } from "../ui/labels";

@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { beforeEach, describe, expect, it } from "vitest";
-import { extractElementInfo } from "../src/context/ElementInfoExtractor";
+import { extractElementInfo } from "../src/context/elementInfoExtractor";
 import { inspectChildren } from "../src/context/inspectChildren";
 
 function pick(html: string, selector = "#target"): Element {

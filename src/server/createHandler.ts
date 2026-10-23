@@ -255,7 +255,7 @@ async function readJsonBody(
 }
 
 // Length is not hidden (the token's length isn't the secret part), but the
-// comparison time no longer depends on how many leading characters match.
+// comparison time doesn't depend on how many leading characters match.
 function timingSafeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   let diff = 0;

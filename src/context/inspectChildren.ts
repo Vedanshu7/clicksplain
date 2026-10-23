@@ -1,6 +1,6 @@
 import type { ElementInfo } from "../connectors/types";
 import { MAX_CHILDREN } from "../shared/wire";
-import { extractElementInfo } from "./ElementInfoExtractor";
+import { extractElementInfo } from "./elementInfoExtractor";
 import { isIgnored } from "./privacy";
 
 /**

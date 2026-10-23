@@ -99,8 +99,8 @@ const CURSOR_SVG =
 //  - the inspect-mode cursor has to apply to the host page itself, since a
 //    shadow root's styles never reach outside its own tree;
 //  - custom property registrations are document-scoped: an @property rule
-//    inside a shadow root's stylesheet silently fails to register (confirmed:
-//    the conic-gradient animation in shadow.css computed to `none`), even
+//    inside a shadow root's stylesheet silently fails to register (the
+//    conic-gradient animation in shadow.css then computes to `none`), even
 //    though consuming the registered property via var() from inside the
 //    shadow tree works fine once it's registered document-side.
 function injectGlobalStyle(): void {

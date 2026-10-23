@@ -6,9 +6,9 @@ import { getShadowHost, removeShadowHost } from "./ui/shadowHost";
 import { applyTheme, type ThemeConfig } from "./ui/theme";
 import { resolveLabels, type Labels } from "./ui/labels";
 import { errorMessageFor } from "./ui/errorMessage";
-import { extractElementInfo } from "./context/ElementInfoExtractor";
-import { type DocsConfig } from "./context/TaggingResolver";
-import { getCurrentRoute } from "./context/RouteMatcher";
+import { extractElementInfo } from "./context/elementInfoExtractor";
+import { type DocsConfig } from "./context/taggingResolver";
+import { getCurrentRoute } from "./context/routeMatcher";
 import {
   ByoEndpointConnector,
   type ByoEndpointConnectorConfig,
@@ -17,7 +17,7 @@ import { PuterConnector, type PuterConnectorConfig } from "./connectors/puter/Pu
 import type { AgentConnector, ChatRequest, ElementInfo } from "./connectors/types";
 import { withIdleTimeout } from "./connectors/withIdleTimeout";
 import { ExplanationCache, type CacheConfig } from "./cache/ExplanationCache";
-import { resolveExplanation } from "./explain/ExplanationResolver";
+import { resolveExplanation } from "./explain/explanationResolver";
 
 export interface InitConfig {
   /**
@@ -292,7 +292,7 @@ if (typeof document !== "undefined") {
   }
 }
 
-export type { DocsConfig } from "./context/TaggingResolver";
+export type { DocsConfig } from "./context/taggingResolver";
 export type { ThemeConfig } from "./ui/theme";
 export type { Labels } from "./ui/labels";
 export type {

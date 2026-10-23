@@ -46,10 +46,9 @@
 }
 
 /* --oa-spin-angle (used by the conic-gradient animations below) is registered
-   as an interpolatable <angle> via @property in shadowHost.ts's light-DOM
-   style tag, NOT here: @property registrations are document-scoped, so one
-   declared inside this shadow-root stylesheet silently fails to register
-   (confirmed empirically: the gradient computed to `none` until moved).
+   as an interpolatable <angle> with CSS.registerProperty in shadowHost.ts,
+   NOT with @property here: registrations are document-scoped, so one
+   declared inside this shadow-root stylesheet silently fails to register.
    Consuming the registered property via var() from in here works fine once
    it's registered light-side. Unsupported browsers keep a static gradient;
    everything else in this file still works. */

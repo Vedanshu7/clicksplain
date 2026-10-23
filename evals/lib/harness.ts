@@ -4,7 +4,7 @@
 // which calls the Anthropic API exactly as production does.
 import { Window } from "happy-dom";
 import { ByoEndpointConnector } from "../../src/connectors/byoEndpoint/ByoEndpointConnector";
-import { extractElementInfo } from "../../src/context/ElementInfoExtractor";
+import { extractElementInfo } from "../../src/context/elementInfoExtractor";
 import { createClicksplainHandler } from "../../src/server/createHandler";
 import { buildChatMessages, buildChatSystemPrompt, buildSystemPrompt, buildUserMessage } from "../../src/shared/promptBuilder";
 import type { ElementInfo, ToolExchangeEntry } from "../../src/shared/wire";

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { MAX_CHILDREN, MAX_TOOL_ROUNDS, type ChatTurn, type ElementInfo, type ToolExchangeEntry } from "./wire";
 
 // Generous headroom over the honest client's own truncation (MAX_TEXT_LENGTH=200
-// in ElementInfoExtractor.ts): that cap only protects the real widget; a request
+// in elementInfoExtractor.ts): that cap only protects the real widget; a request
 // built by hand bypasses it entirely, so the server enforces its own caps here
 // rather than trusting the client's.
 export const MAX_TEXT_LENGTH = 1000;
