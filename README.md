@@ -58,7 +58,7 @@ The API key only ever lives on your server. The widget never touches the page be
 2. Add the widget to your page:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/clicksplain@1/dist/clicksplain.global.js"
+<script src="https://cdn.jsdelivr.net/npm/clicksplain@2/dist/clicksplain.global.js"
         data-connector="byo-endpoint"
         data-endpoint="/api/clicksplain"></script>
 ```
@@ -156,7 +156,7 @@ Load Puter.js yourself (the widget never injects third-party scripts), then:
 
 ```html
 <script src="https://js.puter.com/v2/"></script>
-<script src="https://cdn.jsdelivr.net/npm/clicksplain@1/dist/clicksplain.global.js"
+<script src="https://cdn.jsdelivr.net/npm/clicksplain@2/dist/clicksplain.global.js"
         data-connector="puter"></script>
 ```
 

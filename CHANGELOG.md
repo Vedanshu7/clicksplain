@@ -1,8 +1,8 @@
 # Changelog
 
-## 1.0.0 (unreleased)
+## 2.0.0 (2026-10-23)
 
-First npm release.
+First npm release. Major version because it breaks the `v1.0.0` GitHub tag: `<script data-api-key>` is gone (use `byo-endpoint`, or BYOK through `clicksplain/byok`), and the BYOK connector moved out of the default bundle.
 
 ### Widget
 
