@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Archivo } from "next/font/google";
+import type { ReactNode } from "react";
 import { ClicksplainWidget } from "./ClicksplainWidget";
 import "./globals.css";
 
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
   description: "Reference integration of clicksplain in a Next.js App Router app",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={archivo.variable}>
       <body>
