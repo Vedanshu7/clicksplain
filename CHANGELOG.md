@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `verbose` option (`data-verbose`): console diagnostics are now off by default.
+
 ## 2.0.0 (2026-10-23)
 
 First npm release. Major version because it breaks the `v1.0.0` GitHub tag: `<script data-api-key>` is gone (use `byo-endpoint`, or BYOK through `clicksplain/byok`), and the BYOK connector moved out of the default bundle.

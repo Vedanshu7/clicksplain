@@ -61,6 +61,8 @@ export interface InitConfig {
   position?: "bottom-right" | "bottom-left";
   /** Overrides for any of the widget's own UI strings, e.g. to localize them. */
   labels?: Partial<Labels>;
+  /** Log developer diagnostics (failed endpoint calls, misbehaving endpoints) to the console. */
+  verbose?: boolean;
 }
 
 interface CurrentPick {
@@ -81,6 +83,7 @@ class ClicksplainInstance {
   private readonly docsConfig?: DocsConfig;
   private readonly cache: ExplanationCache;
   private readonly labels: Labels;
+  private readonly verbose: boolean;
   private readonly siteContext: string | null;
   private readonly unsubscribePick: () => void;
   private currentPick: CurrentPick | null = null;
@@ -90,6 +93,7 @@ class ClicksplainInstance {
     // config (e.g. a byo-endpoint connector without an endpoint) fails cleanly with zero UI side effects rather
     // than leaving an orphaned popover behind from a half-finished construction.
     this.labels = resolveLabels(config.labels);
+    this.verbose = config.verbose ?? false;
     this.connector = withIdleTimeout(
       createConnector(config),
       config.timeoutMs ?? (config.connector === "puter" ? 120_000 : 30_000),
@@ -149,6 +153,7 @@ class ClicksplainInstance {
       connector: this.connector,
       popover: this.popover,
       labels: this.labels,
+      verbose: this.verbose,
       signal,
     });
     if (!result || signal.aborted) return;
@@ -198,7 +203,7 @@ class ClicksplainInstance {
       this.chatSession.addAssistantTurn(fullText);
     } catch (err) {
       if (signal.aborted) return;
-      this.popover.setChatError(errorMessageFor(err, this.labels));
+      this.popover.setChatError(errorMessageFor(err, this.labels, this.verbose));
     }
   }
 }
@@ -210,7 +215,11 @@ function createConnector(config: InitConfig): AgentConnector {
     if (!config.endpoint) {
       throw new Error('[clicksplain] "byo-endpoint" connector requires endpoint');
     }
-    const endpointConfig: ByoEndpointConnectorConfig = { endpoint: config.endpoint, token: config.token };
+    const endpointConfig: ByoEndpointConnectorConfig = {
+      endpoint: config.endpoint,
+      token: config.token,
+      verbose: config.verbose,
+    };
     return new ByoEndpointConnector(endpointConfig);
   }
 
@@ -262,6 +271,7 @@ function readConfigFromScriptTag(): InitConfig | null {
     chatModel: script.dataset.chatModel,
     siteContext: script.dataset.siteContext,
     position,
+    verbose: script.dataset.verbose !== undefined && script.dataset.verbose !== "false",
   };
 }
 

@@ -1,12 +1,5 @@
-export interface SseFrame {
-  event: string | null;
-  data: string;
-}
-
-/** Parses a fetch Response body into a stream of {event, data} SSE frames. */
-export async function* parseSseStream(
-  body: ReadableStream<Uint8Array>
-): AsyncGenerator<SseFrame> {
+/** Parses a fetch Response body into the data payload of each SSE frame. */
+export async function* parseSseStream(body: ReadableStream<Uint8Array>): AsyncGenerator<string> {
   const reader = body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
@@ -28,14 +21,14 @@ export async function* parseSseStream(
       while (boundary !== -1) {
         const frame = parseFrame(buffer.slice(0, boundary));
         buffer = buffer.slice(boundary + 2);
-        if (frame) yield frame;
+        if (frame !== null) yield frame;
         boundary = buffer.indexOf("\n\n");
       }
 
       if (done) {
         // A final frame without its trailing blank line is still a frame.
         const frame = parseFrame(buffer);
-        if (frame) yield frame;
+        if (frame !== null) yield frame;
         finished = true;
         return;
       }
@@ -48,20 +41,14 @@ export async function* parseSseStream(
   }
 }
 
-function parseFrame(raw: string): SseFrame | null {
-  let event: string | null = null;
+// Only data lines carry anything this protocol uses; event, id and retry
+// fields are ignored, as the spec allows.
+function parseFrame(raw: string): string | null {
   const dataLines: string[] = [];
-
   for (const line of raw.split("\n")) {
-    if (line.startsWith("event:")) {
-      event = fieldValue(line, "event:");
-    } else if (line.startsWith("data:")) {
-      dataLines.push(fieldValue(line, "data:"));
-    }
+    if (line.startsWith("data:")) dataLines.push(fieldValue(line, "data:"));
   }
-
-  if (dataLines.length === 0) return null;
-  return { event, data: dataLines.join("\n") };
+  return dataLines.length === 0 ? null : dataLines.join("\n");
 }
 
 // Per the spec, exactly one leading space after the colon is stripped, no more.

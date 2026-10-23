@@ -14,6 +14,8 @@ export interface ByoEndpointConnectorConfig {
    * unset matches the proxy's own default open/advisory-warning behavior.
    */
   token?: string;
+  /** Log developer diagnostics to the console. */
+  verbose?: boolean;
 }
 
 interface PendingToolCall {
@@ -79,14 +81,6 @@ export class ByoEndpointConnector implements AgentConnector {
 
       if (!toolCall) return; // finished normally, no tool needed (or none left)
 
-      // createClicksplainHandler forces a text-only finish after MAX_TOOL_ROUNDS,
-      // but a hand-written endpoint might not: stop here rather than loop.
-      if (round === MAX_TOOL_ROUNDS) {
-        throw new Error(
-          "I wasn't able to figure this out with confidence. Feel free to ask a follow-up question!"
-        );
-      }
-
       if (toolCall.toolName !== INSPECT_CHILDREN_NAME) {
         throw new Error(`clicksplain: unsupported tool "${toolCall.toolName}"`);
       }
@@ -100,6 +94,17 @@ export class ByoEndpointConnector implements AgentConnector {
         ...(roundText.trim() ? { preamble: roundText.trim() } : {}),
       });
     }
+
+    // Only reached when the endpoint asked to look inside on every allowed
+    // round: createClicksplainHandler forces a text-only finish after
+    // MAX_TOOL_ROUNDS, but a hand-written endpoint might not.
+    if (this.config.verbose) {
+      console.warn(
+        `[clicksplain] the endpoint asked to look inside more than ${MAX_TOOL_ROUNDS} time(s); ` +
+          "it should finish with text once the limit is reached (createClicksplainHandler does)."
+      );
+    }
+    throw new Error("I wasn't able to figure this out with confidence. Feel free to ask a follow-up question!");
   }
 
   /** Yields text deltas; returns the pending tool call (if any) once the stream pauses or ends. */
@@ -122,7 +127,7 @@ export class ByoEndpointConnector implements AgentConnector {
     }
 
     for await (const frame of parseSseStream(response.body)) {
-      const message = parseCanonicalMessage(safeJsonParse(frame.data));
+      const message = parseCanonicalMessage(safeJsonParse(frame));
       if (!message) continue;
 
       if (message.type === "delta") {

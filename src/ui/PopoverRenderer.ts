@@ -151,9 +151,8 @@ export class PopoverRenderer {
     for (const handler of this.closeHandlers) handler();
   }
 
-  onClose(handler: () => void): () => void {
+  onClose(handler: () => void): void {
     this.closeHandlers.add(handler);
-    return () => this.closeHandlers.delete(handler);
   }
 
   destroy(): void {

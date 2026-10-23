@@ -16,6 +16,7 @@ export interface ResolveExplanationInput {
   connector: AgentConnector;
   popover: PopoverRenderer;
   labels: Labels;
+  verbose: boolean;
   signal: AbortSignal;
 }
 
@@ -33,7 +34,7 @@ export interface ResolvedExplanation {
 export async function resolveExplanation(
   input: ResolveExplanationInput
 ): Promise<ResolvedExplanation | null> {
-  const { element, elementInfo, route, pageLanguage, siteContext, docsConfig, cache, connector, popover, labels, signal } =
+  const { element, elementInfo, route, pageLanguage, siteContext, docsConfig, cache, connector, popover, labels, verbose, signal } =
     input;
 
   const docsContext = resolveDocsContext(elementInfo.agentId, docsConfig, route);
@@ -73,7 +74,7 @@ export async function resolveExplanation(
     return { baseExplanation: fullText, docsContext: null };
   } catch (err) {
     if (signal.aborted) return null;
-    popover.setError(errorMessageFor(err, labels));
+    popover.setError(errorMessageFor(err, labels, verbose));
     return null;
   }
 }

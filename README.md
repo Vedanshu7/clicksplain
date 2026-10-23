@@ -192,6 +192,7 @@ Without a bundler, load `clicksplain-byok.global.js` instead of `clicksplain.glo
 | `model`, `chatModel` | `data-model`, `data-chat-model` | puter. |
 | `siteContext` | `data-site-context` | A sentence about what your site is (e.g. "Crema, the app for a home espresso machine"), sent with every question so jargon is explained in the right sense. Recommended. |
 | `position` | `data-position` | `"bottom-right"` (default) or `"bottom-left"`. |
+| `verbose` | `data-verbose` | Log developer diagnostics to the console: failed endpoint calls, and an endpoint that keeps asking to look inside. Off by default. |
 | `timeoutMs` | | Longest wait for the next piece of an answer. Default 30 s (120 s for puter). |
 | `docsConfig` | | Hand-written explanations: see below. |
 | `cache` | | `{ ttlDays, maxEntries }` for the local explanation cache (default 30 days, 300 entries). |

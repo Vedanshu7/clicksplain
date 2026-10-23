@@ -3,7 +3,7 @@ import { parseSseStream } from "../src/connectors/sse";
 import { collect, streamOf } from "./fixtures";
 
 const data = async (...chunks: string[]) =>
-  (await collect(parseSseStream(streamOf(...chunks)))).map((frame) => frame.data);
+  collect(parseSseStream(streamOf(...chunks)));
 
 describe("parseSseStream", () => {
   it("parses LF-delimited frames", async () => {
@@ -44,7 +44,7 @@ describe("parseSseStream", () => {
       },
     });
     for await (const frame of parseSseStream(body)) {
-      expect(frame.data).toBe("a");
+      expect(frame).toBe("a");
       break;
     }
     expect(cancelled).toBe(true);

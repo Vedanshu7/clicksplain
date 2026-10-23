@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildChatMessages, buildExplainMessages, buildUserMessage } from "../src/shared/promptBuilder";
+import { buildChatMessages, buildChatTextMessages, buildExplainMessages, buildUserMessage } from "../src/shared/promptBuilder";
 import { explainBody } from "./fixtures";
 
 describe("buildUserMessage", () => {
@@ -29,6 +29,14 @@ describe("buildChatMessages", () => {
     });
     expect(messages.map((message) => message.role)).toEqual(["user", "assistant", "user"]);
     expect(messages[messages.length - 1]?.content).toBe("Can I undo it?");
+  });
+
+  it("is the text messages followed by any resolved tool rounds", () => {
+    const chat = { ...explainBody, baseExplanation: "Saves your changes.", history: [], question: "Can I undo it?" };
+    const toolExchange = [{ toolCallId: "t1", toolName: "inspect_children" as const, input: {}, result: [] }];
+    const messages = buildChatMessages({ ...chat, toolExchange });
+    expect(messages.slice(0, 1)).toEqual(buildChatTextMessages(chat));
+    expect(messages.map((message) => message.role)).toEqual(["user", "assistant", "tool"]);
   });
 });
 

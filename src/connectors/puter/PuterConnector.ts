@@ -1,5 +1,5 @@
 import type { AgentConnector, ChatRequest, ExplainRequest } from "../types";
-import { buildChatMessages, buildChatSystemPrompt, buildSystemPrompt, buildUserMessage } from "../../shared/promptBuilder";
+import { buildChatSystemPrompt, buildChatTextMessages, buildSystemPrompt, buildUserMessage } from "../../shared/promptBuilder";
 import {
   INSPECT_CHILDREN_DESCRIPTION,
   INSPECT_CHILDREN_NAME,
@@ -52,7 +52,7 @@ export class PuterConnector implements AgentConnector {
   async *chat(element: Element, req: ChatRequest, signal: AbortSignal): AsyncIterable<string> {
     const messages: PuterChatMessage[] = [
       { role: "system", content: buildChatSystemPrompt() },
-      ...toPuterMessages(buildChatMessages(req)),
+      ...buildChatTextMessages(req),
     ];
     yield* this.runWithToolLoop(element, messages, this.config.chatModel ?? this.config.model, signal);
   }
@@ -171,16 +171,4 @@ function toError(err: unknown): Error {
     if (typeof message === "string" && message) return new Error(message);
   }
   return new Error("Puter request failed. Please try again.");
-}
-
-// Structured (array) content only comes from toolExchange, which this
-// connector never sends: it runs its own tool loop in-process. The check
-// narrows the type and fails loudly if that ever changes.
-function toPuterMessages(built: readonly { role: string; content: unknown }[]): PuterChatMessage[] {
-  return built.map((m) => {
-    if (typeof m.content !== "string") {
-      throw new Error("[clicksplain] internal error: puter connector received a non-string message");
-    }
-    return { role: m.role as PuterChatMessage["role"], content: m.content };
-  });
 }

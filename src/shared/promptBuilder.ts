@@ -10,6 +10,7 @@ type ToolResultPart = {
   toolName: string;
   output: { type: "text"; value: string };
 };
+export type TextMessage = { role: "user" | "assistant"; content: string };
 export type PromptMessage =
   | { role: "user"; content: string }
   | { role: "assistant"; content: string | (TextPart | ToolCallPart)[] }
@@ -142,6 +143,11 @@ export function buildExplainMessages(req: ExplainLike): PromptMessage[] {
 
 /** Builds a correctly-alternating messages array for a chat turn. */
 export function buildChatMessages(req: ChatLike): PromptMessage[] {
+  return [...buildChatTextMessages(req), ...toolExchangeMessages(req.toolExchange ?? [])];
+}
+
+/** The chat turn's plain-text messages, without any resolved tool rounds. */
+export function buildChatTextMessages(req: ChatLike): TextMessage[] {
   // The framing context (element info + docsContext + baseExplanation) is fused
   // into the first user turn rather than sent as its own message: a standalone
   // context message would sit back to back with the next user turn, and the
@@ -149,17 +155,13 @@ export function buildChatMessages(req: ChatLike): PromptMessage[] {
   const context = buildChatContextMessage(req);
 
   if (req.history.length === 0) {
-    return [
-      { role: "user" as const, content: `${context}\n\nQuestion: ${req.question}` },
-      ...toolExchangeMessages(req.toolExchange ?? []),
-    ];
+    return [{ role: "user", content: `${context}\n\nQuestion: ${req.question}` }];
   }
 
   const [firstTurn, ...restTurns] = req.history;
   return [
-    { role: "user" as const, content: `${context}\n\nQuestion: ${firstTurn!.text}` },
+    { role: "user", content: `${context}\n\nQuestion: ${firstTurn!.text}` },
     ...restTurns.map((turn) => ({ role: turn.role, content: turn.text })),
-    { role: "user" as const, content: req.question },
-    ...toolExchangeMessages(req.toolExchange ?? []),
+    { role: "user", content: req.question },
   ];
 }
