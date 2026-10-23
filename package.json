@@ -1,6 +1,6 @@
 {
   "name": "clicksplain",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Drop-in AI widget that explains any UI element on click. Ships the browser widget, LLM connectors, and a runtime-agnostic server handler; no hosted backend.",
   "license": "MIT",
   "author": "Vedanshu Joshi",

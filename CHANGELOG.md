@@ -1,8 +1,13 @@
 # Changelog
 
-## Unreleased
+## 2.1.0 (2026-10-23)
 
-- `verbose` option (`data-verbose`): console diagnostics are now off by default.
+- `verbose` option (`data-verbose`): developer diagnostics in the console, off by default. A failed endpoint call no longer logs unless it is on.
+- The inspect-mode cursor uses the theme's accent color instead of always the default purple.
+- An error message now repositions the popover, so a long one no longer runs off screen.
+- With reduced motion on, the "?" button no longer scales or tilts.
+- A request cancelled before it started is no longer sent anyway.
+- `examples/proxy-node-http`: the rate limiter uses the connection's address and only trusts `X-Forwarded-For` with `TRUST_PROXY=1`, so callers can't dodge it with a made-up header; stale entries are cleaned up.
 
 ## 2.0.0 (2026-10-23)
 
