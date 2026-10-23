@@ -4,9 +4,9 @@ import { basename } from "node:path";
 import { CHAT_CASES } from "../cases/chat";
 import { EXPLAIN_CASES } from "../cases/explain";
 import type { ChatCase, ExplainCase } from "../cases/types";
-import { runChecks } from "./checks";
+import { runChecks, type CheckId } from "./checks";
 import { runCase as runThroughWidget, type CaseRun, type Usage } from "./harness";
-import { judge } from "./judge";
+import { judge, type JudgeResult } from "./judge";
 
 type AnyCase = ExplainCase | ChatCase;
 type LoadedCase = AnyCase & { prompt: string; tags: string[] };
@@ -56,7 +56,14 @@ export async function runCase(c: LoadedCase, ctx: Ctx): Promise<CaseRun> {
   return runThroughWidget(c, ctx.model ?? DEFAULT_MODEL);
 }
 
-export async function gradeCase(c: LoadedCase, run: CaseRun) {
+export interface GradedCase {
+  grade: Record<"pass" | "key_facts" | "accurate" | "helpful" | CheckId, number>;
+  explanation: Record<string, string>;
+  judge_model?: string;
+  judge_usage?: JudgeResult["usage"];
+}
+
+export async function gradeCase(c: LoadedCase, run: CaseRun): Promise<GradedCase> {
   const checks = runChecks(c, run.output, run.inspected);
   // Nothing for a judge to read, or an answer that already leaked a forbidden
   // string: the judge call would only cost tokens to confirm a failure.
@@ -80,7 +87,7 @@ export async function gradeCase(c: LoadedCase, run: CaseRun) {
   };
 }
 
-export function perfFrom(run: CaseRun & { judge_model?: string; judge_usage?: Partial<Usage> }) {
+export function perfFrom(run: CaseRun & { judge_model?: string; judge_usage?: Partial<Usage> }): Record<string, number> {
   return {
     output_words: run.output.split(/\s+/).filter(Boolean).length,
     looked_inside: run.inspected ? 1 : 0,

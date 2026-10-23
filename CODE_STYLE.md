@@ -84,7 +84,7 @@ holds a real, billable LLM API key. When touching `src/server/` or
 - `npm run lint`: ESLint (`eslint.config.js`, typescript-eslint recommended,
   no `any`, type-only imports marked as such). There's no formatter: match
   the surrounding code.
-- `npm run typecheck`: covers `src/` and `test/`, zero errors.
+- `npm run typecheck`: covers `src/`, `test/` and `evals/`, zero errors.
 - `npm test`: vitest, tests live in `test/`. DOM-dependent tests opt into
   happy-dom with a `// @vitest-environment happy-dom` first line.
 - `npm run size`: the widget bundles have size budgets in `.size-limit.json`.

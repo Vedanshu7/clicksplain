@@ -1,5 +1,20 @@
 import type { ChatTurn, ElementInfo, ToolExchangeEntry } from "./wire";
 
+// Plain shapes rather than the AI SDK's ModelMessage: the browser core imports
+// this file and must not depend on the SDK. They match it structurally.
+type TextPart = { type: "text"; text: string };
+type ToolCallPart = { type: "tool-call"; toolCallId: string; toolName: string; input: Record<string, never> };
+type ToolResultPart = {
+  type: "tool-result";
+  toolCallId: string;
+  toolName: string;
+  output: { type: "text"; value: string };
+};
+export type PromptMessage =
+  | { role: "user"; content: string }
+  | { role: "assistant"; content: string | (TextPart | ToolCallPart)[] }
+  | { role: "tool"; content: ToolResultPart[] };
+
 // Structural, so both the client's ExplainRequest/ChatRequest (connectors/types.ts)
 // and the server's ExplainRequestBody/ChatRequestBody (./protocol.ts, which add a
 // `mode` discriminator) satisfy these without a cast.
@@ -99,7 +114,7 @@ function buildChatContextMessage(req: ChatLike): string {
  * multi-step loop handles tool calls in-memory within one streamText call, so
  * this is always a no-op there).
  */
-function toolExchangeMessages(toolExchange: ToolExchangeEntry[]) {
+function toolExchangeMessages(toolExchange: ToolExchangeEntry[]): PromptMessage[] {
   return toolExchange.flatMap((entry) => [
     {
       role: "assistant" as const,
@@ -122,26 +137,19 @@ function toolExchangeMessages(toolExchange: ToolExchangeEntry[]) {
   ]);
 }
 
-export function buildExplainMessages(req: ExplainLike) {
+export function buildExplainMessages(req: ExplainLike): PromptMessage[] {
   return [
     { role: "user" as const, content: buildUserMessage(req) },
     ...toolExchangeMessages(req.toolExchange ?? []),
   ];
 }
 
-/**
- * Builds a correctly-alternating messages array for a chat turn. The framing
- * context (element info + docsContext + baseExplanation) is fused into the
- * FIRST real user turn rather than sent as its own standalone user message:
- * a standalone context message followed immediately by history[0] (always
- * role "user", since a thread always starts with a user question) or by the
- * bare new question would put two consecutive "user" messages back to back
- * with no assistant turn between them. Anthropic's API doesn't reject that,
- * but the model reliably fails to recognize the trailing text as "the new
- * question" and responds as if no question was asked at all; reproduced
- * directly against the live API during v2 verification.
- */
-export function buildChatMessages(req: ChatLike) {
+/** Builds a correctly-alternating messages array for a chat turn. */
+// The framing context (element info + docsContext + baseExplanation) is fused
+// into the first user turn rather than sent as its own message: a standalone
+// context message would sit back to back with the next user turn, and the
+// model then answers as if no question was asked at all.
+export function buildChatMessages(req: ChatLike): PromptMessage[] {
   const context = buildChatContextMessage(req);
 
   if (req.history.length === 0) {
