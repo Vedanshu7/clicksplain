@@ -90,7 +90,9 @@ for. Unset allows every origin, which is only fine locally.
 
 **A rate limit (`onRequest`).** `src/server.ts` passes a small fixed-window,
 per-IP limiter (`RATE_LIMIT_PER_MINUTE`, default 20) as `onRequest`; anything
-it returns (here a `429`) is sent instead of calling the model. It keeps
+it returns (here a `429`) is sent instead of calling the model. The IP is the
+connection's own address; set `TRUST_PROXY=1` only behind a reverse proxy
+that sets `X-Forwarded-For`, since callers can put anything in that header. It keeps
 counts in memory, so it only works for a single process: behind a load
 balancer or on serverless, back it with a shared store (Redis, Upstash, your
 platform's rate limiting) or use a limit at your proxy/CDN instead.
